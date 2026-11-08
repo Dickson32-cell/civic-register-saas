@@ -1,0 +1,67 @@
+<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Civic Register SaaS &#8212; Architecture</title><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>
+:root{--paper:#f8fafc;--ink:#1e293b;--muted:#475569;--soft:#64748b;--rule:rgba(30,41,59,.12);--accent:#f97316}
+*{box-sizing:border-box}
+body{margin:0;background:#f8fafc;color:#1e293b;font-family:'Geist',system-ui,sans-serif;padding:48px 24px 40px;display:flex;flex-direction:column;align-items:center}
+.wrap{width:100%;max-width:1120px}
+.eyebrow{font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:#64748b}
+h1{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:1.75rem;margin:.5rem 0 .35rem}
+p.sub{color:#475569;font-size:14px;max-width:780px;margin:0;line-height:1.55}
+figure{margin:32px 0 0}
+svg{width:100%;height:auto;display:block}
+.cards{display:grid;grid-template-columns:1.1fr 1fr .9fr;gap:16px;margin-top:32px}
+.card{background:#fff;border:1px solid rgba(30,41,59,.12);border-radius:6px;padding:16px 20px}
+.card h3{margin:0 0 6px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card p{margin:0;font-size:12.5px;color:#475569;line-height:1.55}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+footer{margin-top:32px;padding-top:12px;border-top:1px solid rgba(30,41,59,.12);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#64748b}
+</style></head><body><div class='wrap'><div class='eyebrow'>RAMETECH CONSULTANCY &#183; CIVIC REGISTER SAAS &#183; CONCEPT 1 OF 3</div><h1>Multi-Tenant Civic Register Platform</h1><p class='sub'>One product, many institutions. Each district, assembly or institution gets its own branded register system and its own isolated database &#8212; served by a single codebase you control.</p><figure><svg viewBox="0 0 1120 620" role="img" aria-labelledby="d1-t d1-d">
+<title id="d1-t">Multi-tenant civic register platform</title>
+<desc id="d1-d">Architecture: three institution tenants, each with its own branding, connect to one RameTech SaaS core, which writes to an isolated Neon Postgres database per tenant and bills each tenant GHS 4,000 per year through Paystack.</desc>
+<defs>
+<marker id="d1-a" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#475569"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="#f8fafc"/>
+<rect x="64" y="64" width="992" height="120" rx="8" fill="rgba(30,41,59,0.02)" stroke="rgba(30,41,59,0.10)" stroke-width="0.8"/>
+<rect x="500" y="68" width="120" height="12" rx="2" fill="#f8fafc"/>
+<text x="560" y="77" fill="rgba(30,41,59,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">CLIENT INSTANCES</text>
+<rect x="88" y="408" width="904" height="136" rx="8" fill="rgba(30,41,59,0.02)" stroke="rgba(30,41,59,0.10)" stroke-width="0.8"/>
+<rect x="492" y="412" width="96" height="12" rx="2" fill="#f8fafc"/>
+<text x="540" y="421" fill="rgba(30,41,59,0.40)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">DATA + BILLING</text>
+<line x1="220" y1="168" x2="220" y2="264" stroke="#475569" stroke-width="1.2" marker-end="url(#d1-a)"/>
+<line x1="560" y1="168" x2="560" y2="264" stroke="#475569" stroke-width="1.2" marker-end="url(#d1-a)"/>
+<line x1="860" y1="168" x2="860" y2="264" stroke="#475569" stroke-width="1.2" marker-end="url(#d1-a)"/>
+<line x1="320" y1="352" x2="320" y2="440" stroke="#475569" stroke-width="1.2" marker-end="url(#d1-a)"/>
+<line x1="800" y1="352" x2="800" y2="440" stroke="#475569" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#d1-a)"/>
+<rect x="-82" y="388" width="82" height="12" rx="2" fill="#f8fafc"/><text x="338" y="397" fill="#475569" font-size="8" font-family="'Geist Mono', monospace" text-anchor="start" letter-spacing="0.06em">PROVISIONS</text>
+<rect x="-92" y="388" width="92" height="12" rx="2" fill="#f8fafc"/><text x="812" y="397" fill="#475569" font-size="8" font-family="'Geist Mono', monospace" text-anchor="start" letter-spacing="0.06em">GHS 4,000/YR</text>
+<rect x="100" y="96" width="240" height="72" rx="6" fill="#f8fafc"/><rect x="100" y="96" width="240" height="72" rx="6" fill="rgba(71,85,105,0.10)" stroke="#64748b" stroke-width="1"/><rect x="108" y="102" width="52" height="12" rx="2" fill="transparent" stroke="rgba(71,85,105,0.55)" stroke-width="0.8"/><text x="134" y="111" fill="rgba(71,85,105,0.55)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TENANT</text><text x="220" y="136" fill="#1e293b" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">New Juaben South M.A.</text><text x="220" y="154" fill="#475569" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">logo &#183; colours &#183; custom fields</text>
+<rect x="440" y="96" width="240" height="72" rx="6" fill="#f8fafc"/><rect x="440" y="96" width="240" height="72" rx="6" fill="rgba(71,85,105,0.10)" stroke="#64748b" stroke-width="1"/><rect x="448" y="102" width="52" height="12" rx="2" fill="transparent" stroke="rgba(71,85,105,0.55)" stroke-width="0.8"/><text x="474" y="111" fill="rgba(71,85,105,0.55)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TENANT</text><text x="560" y="136" fill="#1e293b" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Any District Assembly</text><text x="560" y="154" fill="#475569" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">logo &#183; colours &#183; custom fields</text>
+<rect x="780" y="96" width="240" height="72" rx="6" fill="#f8fafc"/><rect x="780" y="96" width="240" height="72" rx="6" fill="rgba(71,85,105,0.10)" stroke="#64748b" stroke-width="1"/><rect x="788" y="102" width="52" height="12" rx="2" fill="transparent" stroke="rgba(71,85,105,0.55)" stroke-width="0.8"/><text x="814" y="111" fill="rgba(71,85,105,0.55)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">TENANT</text><text x="900" y="136" fill="#1e293b" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Any Institution</text><text x="900" y="154" fill="#475569" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">logo &#183; colours &#183; custom fields</text>
+<rect x="120" y="264" width="840" height="88" rx="6" fill="#f8fafc"/>
+<rect x="120" y="264" width="840" height="88" rx="6" fill="rgba(249,115,22,0.08)" stroke="#f97316" stroke-width="1"/>
+<rect x="128" y="270" width="40" height="12" rx="2" fill="transparent" stroke="rgba(249,115,22,0.6)" stroke-width="0.8"/><text x="148" y="279" fill="rgba(249,115,22,0.6)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CORE</text>
+<text x="540" y="300" fill="#1e293b" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">RameTech SaaS Core</text>
+<text x="540" y="320" fill="#475569" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">one next.js app on vercel &#183; tenant router &#183; rls on every query</text>
+<text x="540" y="336" fill="#475569" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">branding engine &#183; kobo-style custom form fields &#183; printable bills</text>
+<rect x="120" y="440" width="400" height="72" rx="6" fill="#f8fafc"/>
+<rect x="120" y="440" width="400" height="72" rx="6" fill="rgba(30,41,59,0.05)" stroke="#475569" stroke-width="1"/>
+<rect x="128" y="446" width="66" height="12" rx="2" fill="transparent" stroke="rgba(71,85,105,0.55)" stroke-width="0.8"/><text x="161" y="455" fill="rgba(71,85,105,0.55)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DATABASE</text>
+<text x="320" y="478" fill="#1e293b" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Neon Postgres &#8212; tenant databases</text>
+<text x="320" y="496" fill="#475569" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">1 isolated database per tenant &#183; auto-created at signup</text>
+<rect x="640" y="440" width="320" height="72" rx="6" fill="#f8fafc"/>
+<rect x="640" y="440" width="320" height="72" rx="6" fill="rgba(30,41,59,0.03)" stroke="rgba(30,41,59,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+<rect x="648" y="446" width="62" height="12" rx="2" fill="transparent" stroke="rgba(71,85,105,0.55)" stroke-width="0.8"/><text x="679" y="455" fill="rgba(71,85,105,0.55)" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.08em">EXTERNAL</text>
+<text x="800" y="478" fill="#1e293b" font-size="12" font-weight="600" font-family="'Geist', sans-serif" text-anchor="middle">Paystack</text>
+<text x="800" y="496" fill="#475569" font-size="9" font-family="'Geist Mono', monospace" text-anchor="middle">momo &#183; card &#183; ghs 4,000 per tenant / yr</text>
+<text x="120" y="552" font-family="'Instrument Serif', serif" font-style="italic" font-size="14" fill="#64748b">Each institution gets its own sealed database &#8212; no tenant can ever read another's records.</text>
+<line x1="30" y1="568" x2="1090" y2="568" stroke="rgba(30,41,59,0.10)" stroke-width="0.8"/>
+<text x="30" y="586" fill="#475569" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+<rect x="110" y="578" width="12" height="12" rx="2" fill="rgba(71,85,105,0.10)" stroke="#64748b"/>
+<text x="128" y="588" fill="#475569" font-size="9" font-family="'Geist Mono', monospace">TENANT APP</text>
+<rect x="240" y="578" width="12" height="12" rx="2" fill="rgba(249,115,22,0.08)" stroke="#f97316"/>
+<text x="258" y="588" fill="#475569" font-size="9" font-family="'Geist Mono', monospace">SAAS CORE</text>
+<rect x="360" y="578" width="12" height="12" rx="2" fill="rgba(30,41,59,0.05)" stroke="#475569"/>
+<text x="378" y="588" fill="#475569" font-size="9" font-family="'Geist Mono', monospace">DATABASE</text>
+<rect x="470" y="578" width="12" height="12" rx="2" fill="rgba(30,41,59,0.03)" stroke="rgba(30,41,59,0.30)" stroke-dasharray="4,3"/>
+<text x="488" y="588" fill="#475569" font-size="9" font-family="'Geist Mono', monospace">EXTERNAL SERVICE</text>
+</svg></figure><div class="cards"><div class="card"><h3><span class="dot" style="background:#f97316"></span>Pricing</h3><p>GHS 4,000 per institution per year (&#8776;US$345 at ~11.6). Flat for every client &#8212; the more institutions you hold, the more you earn.</p></div><div class="card"><h3><span class="dot" style="background:#1e293b"></span>Tenancy</h3><p>One Next.js app on Vercel; one isolated Neon database created per institution at signup; Postgres RLS seals each tenant's data.</p></div><div class="card"><h3><span class="dot" style="background:#475569"></span>Customisation</h3><p>Logo, colours, name and subdomain per tenant, plus KoBoCollect-style custom fields their officers can add and rename.</p></div></div><footer>RAMETECH CONSULTANCY &#183; CIVIC REGISTER SAAS &#183; CONCEPT DIAGRAMS &#183; 26 SEP 2026</footer></div></body></html>
