@@ -65,6 +65,17 @@ export default function ServicesPanel() {
 
   return (
     <div>
+        <div className="card" style={{ marginBottom: 12 }}>
+          <h2 style={{ margin: 0, fontSize: 15 }}>Adding staff?</h2>
+          <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+            Send each new staff member this sign-up link (e.g. on WhatsApp) — their account waits
+            for your approval under <a href="/admin/approvals" style={{ color: "var(--blue)", fontWeight: 600 }}>Approvals</a>:
+          </div>
+          <code style={{ display: "inline-block", marginTop: 6, fontSize: 13, background: "var(--blue-soft)", padding: "6px 10px", borderRadius: 6 }}>
+            {typeof window !== "undefined" ? `${window.location.origin}/register` : "/register"}
+          </code>
+        </div>
+
       <div className="card" style={{ marginBottom: 12 }}>
         <h2 style={{ margin: "0 0 6px", fontSize: 16 }}>Services</h2>
         <div style={{ fontSize: 13, color: "var(--muted)" }}>

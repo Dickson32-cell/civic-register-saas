@@ -7,7 +7,7 @@ type Srv = {
   id: string;
   tenantId: string;
   tenantName: string;
-  kind: "STAFF_SEATS" | "BRANDING";
+  kind: "STAFF_SEATS" | "BRANDING" | "ONBOARDING";
   seats?: number | null;
   note?: string | null;
   contactPhone?: string | null;
@@ -72,7 +72,7 @@ export default function ServiceRequestsCard() {
                 borderRadius: 999, fontSize: 12, padding: "2px 9px", fontWeight: 700,
                 background: "var(--gold-soft)", color: "var(--navy)",
               }}>
-                {r.kind === "STAFF_SEATS" ? `Staff seats: ${r.seats}` : "Logo & branding"}
+                {r.kind === "STAFF_SEATS" ? `Staff seats: ${r.seats}` : r.kind === "ONBOARDING" ? "New workspace request" : "Logo & branding"}
               </span>
               {r.contactPhone && <span style={{ fontSize: 13 }}>📞 {r.contactPhone}</span>}
               <span style={{ fontSize: 12, color: "var(--muted)" }}>{new Date(r.createdAt).toLocaleString()}</span>

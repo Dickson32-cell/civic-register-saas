@@ -1,4 +1,4 @@
-// Home = the register (server component guards the session)
+// Home — signed-out visitors get the public landing; signed-in users get the register.
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getFullUser, tenantId, prisma } from "@/lib/db";
@@ -8,10 +8,14 @@ import SmsPanel from "./SmsPanel";
 import { isMasterDeployment } from "@/lib/masterFlag";
 import LicenseGate from "./LicenseGate";
 import TopBar from "./TopBar";
+import Landing from "./Landing";
 
 export default async function HomePage() {
   const session = await getSession();
-  if (!session) redirect("/login");
+
+  // PUBLIC LANDING — the product is shown first; sign-in and staff signup
+  // surface where they belong, not as a wall.
+  if (!session) return <Landing />;
 
   const me = await getFullUser(session);
   if (!me || !me.active) redirect("/login");

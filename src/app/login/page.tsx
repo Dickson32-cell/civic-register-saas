@@ -91,12 +91,12 @@ export default function LoginPage() {
         </label>
 
         <div style={{ marginTop: 14, fontSize: 13, color: "var(--muted)" }}>
-          New staff member?{" "}
+          New to CivicData?{" "}
           <a
-            href="/register"
+            href="/signup"
             style={{ color: "var(--blue)", fontWeight: 600 }}
           >
-            Register for approval
+            Request your workspace
           </a>
         </div>
 

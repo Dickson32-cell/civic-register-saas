@@ -7,7 +7,7 @@ const SESSION_COOKIE = "adweso_session";
 
 // PUBLIC: login + register pages and the public branding read (institution
 // name/logo shown on the sign-in screen). Everything else needs a session cookie.
-const PUBLIC = ["/api/auth/login", "/api/auth/register", "/api/tenant/branding", "/login", "/register"];
+const PUBLIC = ["/api/auth/login", "/api/auth/register", "/api/tenant/branding", "/api/signup-request", "/signup", "/login", "/register"];
 
 // EDGE NOTE: signature verification is NOT done here. Next.js middleware runs
 // on the edge runtime where env vars may not be inlined, so verifying with the
