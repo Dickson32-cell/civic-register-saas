@@ -11,6 +11,10 @@ type Props = {
   brandingUnlocked: boolean;
   billHeading: string;
   billFooter: string;
+  currentBillTitle: string;
+  currentBillLegal1: string;
+  currentBillLegal2: string;
+  currentBillStamp: string;
 };
 
 const COLOURS = ["#1c3f6e", "#3e7bfa", "#7d3cf5", "#0a6e43", "#b0322a", "#b88721"];
@@ -21,6 +25,10 @@ export default function InterfacePanel(p: Props) {
   const [logo, setLogo] = useState<string>(p.logoDataUrl ?? "");
   const [billHeading, setBillHeading] = useState(p.billHeading);
   const [billFooter, setBillFooter] = useState(p.billFooter);
+  const [billTitle, setBillTitle] = useState(p.currentBillTitle);
+  const [billLegal1, setBillLegal1] = useState(p.currentBillLegal1);
+  const [billLegal2, setBillLegal2] = useState(p.currentBillLegal2);
+  const [billStamp, setBillStamp] = useState(p.currentBillStamp);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -132,13 +140,33 @@ export default function InterfacePanel(p: Props) {
               <input value={billHeading} onChange={(e) => setBillHeading(e.target.value)} maxLength={120}
                 style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15 }} />
             </label>
-            <label className="fld" style={{ display: "block", marginBottom: 12 }}>
+            <label className="fld" style={{ display: "block", marginBottom: 10 }}>
+              <span className="cap">Title line (default: TEMPORAL STRUCTURES BILL — write your own, e.g. MEMBERSHIP DUES)</span>
+              <input value={billTitle} onChange={(e) => setBillTitle(e.target.value)} maxLength={60}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15 }} />
+            </label>
+            <label className="fld" style={{ display: "block", marginBottom: 10 }}>
               <span className="cap">Footer note on your bills (optional)</span>
               <input value={billFooter} onChange={(e) => setBillFooter(e.target.value)} maxLength={200}
                 style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15 }} />
             </label>
+            <label className="fld" style={{ display: "block", marginBottom: 10 }}>
+              <span className="cap">Legal note 1 — what this bill is for (default keeps the council wording)</span>
+              <textarea value={billLegal1} onChange={(e) => setBillLegal1(e.target.value)} maxLength={700} rows={4}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 14 }} />
+            </label>
+            <label className="fld" style={{ display: "block", marginBottom: 10 }}>
+              <span className="cap">Legal note 2 — payment instructions (default keeps the council wording)</span>
+              <textarea value={billLegal2} onChange={(e) => setBillLegal2(e.target.value)} maxLength={700} rows={4}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 14 }} />
+            </label>
+            <label className="fld" style={{ display: "block", marginBottom: 12 }}>
+              <span className="cap">Stamp caption (default: ZONAL COUNCIL STAMP — e.g. OFFICIAL STAMP)</span>
+              <input value={billStamp} onChange={(e) => setBillStamp(e.target.value)} maxLength={40}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15 }} />
+            </label>
             <button className="btn btn-primary btn-sm" disabled={busy}
-              onClick={() => save({ billHeading, billFooter }, "Bill design saved — your next printed bills use it.")}>
+              onClick={() => save({ billHeading, billFooter, billTitle, billLegal1, billLegal2, billStamp }, "Bill design saved — your next printed bills use it.")}>
               Save bill design
             </button>
           </>

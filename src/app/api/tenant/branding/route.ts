@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not permitted" }, { status: 403 });
 
   try {
-    const { logoDataUrl, colour, name, billHeading, billFooter } = await req.json();
+    const { logoDataUrl, colour, name, billHeading, billFooter, billTitle, billLegal1, billLegal2, billStamp: billStampCaption } = await req.json();
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId() },
       select: { brandingUnlocked: true, logoDataUrl: true },
@@ -54,19 +54,25 @@ export async function POST(req: NextRequest) {
     }
 
     // PAID: bill designer text fields (gate = branding service)
-    if (billHeading !== undefined || billFooter !== undefined) {
+    if (billHeading !== undefined || billFooter !== undefined || billTitle !== undefined || billLegal1 !== undefined || billLegal2 !== undefined || billStampCaption !== undefined) {
       if (!tenant?.brandingUnlocked)
         return NextResponse.json(
           { error: "The bill designer is a paid service. Request it under Admin > Services." },
           { status: 403 }
         );
-      if (billHeading !== undefined) {
-        const h = typeof billHeading === "string" ? billHeading.trim().slice(0, 120) : "";
-        data.billHeadingOverride = h; // empty string = fall back to institution name
-      }
-      if (billFooter !== undefined) {
-        const f = typeof billFooter === "string" ? billFooter.trim().slice(0, 200) : "";
-        data.billFooterNote = f;
+      const textFields: Array<[string, string | undefined, number]> = [
+        ["billHeadingOverride", billHeading, 120],
+        ["billFooterNote", billFooter, 200],
+        ["billTitle", billTitle, 60],
+        ["billLegal1", billLegal1, 700],
+        ["billLegal2", billLegal2, 700],
+        ["billStampCaption", billStampCaption, 40],
+      ];
+      for (const [key, val, max] of textFields) {
+        if (val !== undefined) {
+          const s = typeof val === "string" ? val.trim().slice(0, max) : "";
+          data[key] = s; // empty string = fall back to the standard wording
+        }
       }
     }
 

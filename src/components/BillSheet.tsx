@@ -19,6 +19,10 @@ export type BillData = {
     logoDataUrl: string | null;
     heading: string | null;
     footer: string | null;
+    title?: string | null;
+    legal1?: string | null;
+    legal2?: string | null;
+    stamp?: string | null;
     fallbackName?: string | null;
   } | null;
 };
@@ -101,7 +105,7 @@ export default function BillSheet({ data, directorName, orientation = "portrait"
           <div className="htxt">
             {headingLine}
             <br />
-            <span className="sub">TEMPORAL STRUCTURES BILL</span>
+            <span className="sub">{brand?.title?.trim() ? brand.title.trim().toUpperCase() : "TEMPORAL STRUCTURES BILL"}</span>
             <br />
             <span className="sub">{payLine}</span>
           </div>
@@ -149,17 +153,25 @@ export default function BillSheet({ data, directorName, orientation = "portrait"
 
         <div className="bill-legal">
           <p>
-            PAY YOUR BILLS PROMPTLY FOR ACCELERATED DEVELOPMENT OF THE {data.councilName.toUpperCase().replace(" ZONAL COUNCIL", "")} ZONE.
-            The Zonal Council is vested with power to collect temporal structure fees within its electoral
-            areas by the provisions of the Local Governance Act 2016 (ACT 936) and other relevant Bye-laws.
-            In the event of failure to comply with this Bill, the PROPERTY or BUSINESS OWNER SHALL BE
-            LIABLE TO CIVIL PROSECUTION for the recovery of the outstanding amount plus interest.
+            {brand?.legal1?.trim() ? brand.legal1 : (
+              <>
+                PAY YOUR BILLS PROMPTLY FOR ACCELERATED DEVELOPMENT OF THE {data.councilName.toUpperCase().replace(" ZONAL COUNCIL", "")} ZONE.
+                The Zonal Council is vested with power to collect temporal structure fees within its electoral
+                areas by the provisions of the Local Governance Act 2016 (ACT 936) and other relevant Bye-laws.
+                In the event of failure to comply with this Bill, the PROPERTY or BUSINESS OWNER SHALL BE
+                LIABLE TO CIVIL PROSECUTION for the recovery of the outstanding amount plus interest.
+              </>
+            )}
           </p>
           <p>
-            NB: Unless otherwise stated, penalty for defaulting any rate is 3x the amount due. Penalty for all
-            defaulting rate payers take effect from the date stated above. Payment can be done at the Zonal
-            Council office, through revenue collectors, or at the Assembly pay point. Obtain an official
-            General Counterfoil Receipt (GCR) for any amount paid and do not make any payment without this BILL.
+            {brand?.legal2?.trim() ? brand.legal2 : (
+              <>
+                NB: Unless otherwise stated, penalty for defaulting any rate is 3x the amount due. Penalty for all
+                defaulting rate payers take effect from the date stated above. Payment can be done at the Zonal
+                Council office, through revenue collectors, or at the Assembly pay point. Obtain an official
+                General Counterfoil Receipt (GCR) for any amount paid and do not make any payment without this BILL.
+              </>
+            )}
           </p>
         </div>
 
@@ -174,7 +186,7 @@ export default function BillSheet({ data, directorName, orientation = "portrait"
           </div>
           <div className="sig-stamp">
             <div className="sig-rule" />
-            <div className="sig-cap">ZONAL COUNCIL STAMP</div>
+            <div className="sig-cap">{brand?.stamp?.trim() ? brand.stamp.trim().toUpperCase() : "ZONAL COUNCIL STAMP"}</div>
           </div>
         </div>
       </div>

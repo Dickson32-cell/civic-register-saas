@@ -16,7 +16,7 @@ export default async function AdminInterfacePage() {
 
   const tenant = (await prisma.tenant.findUnique({
     where: { id: tenantId() },
-    select: { name: true, colour: true, logoDataUrl: true, brandingUnlocked: true, billHeadingOverride: true, billFooterNote: true },
+    select: { name: true, colour: true, logoDataUrl: true, brandingUnlocked: true, billHeadingOverride: true, billFooterNote: true, billTitle: true, billLegal1: true, billLegal2: true, billStampCaption: true },
   })) ?? null;
 
   return (
@@ -30,6 +30,10 @@ export default async function AdminInterfacePage() {
           brandingUnlocked={tenant?.brandingUnlocked ?? false}
           billHeading={tenant?.billHeadingOverride ?? ""}
           billFooter={tenant?.billFooterNote ?? ""}
+          currentBillTitle={tenant?.billTitle ?? ""}
+          currentBillLegal1={tenant?.billLegal1 ?? ""}
+          currentBillLegal2={tenant?.billLegal2 ?? ""}
+          currentBillStamp={tenant?.billStampCaption ?? ""}
         />
       </main>
     </div>

@@ -37,6 +37,10 @@ model Tenant {
   logoDataUrl      String? @map("logo_data_url")                     // institution logo (unlocked only)
   billHeadingOverride String? @map("bill_heading_override") @db.VarChar(120) // bill designer (locked)
   billFooterNote      String? @map("bill_footer_note") @db.VarChar(200)      // bill designer (locked)
+  billTitle       String? @map("bill_title") @db.VarChar(60)   // e.g. "TEMPORAL STRUCTURES BILL" (locked)
+  billLegal1      String? @map("bill_legal1") @db.VarChar(700) // first legal paragraph (locked)
+  billLegal2      String? @map("bill_legal2") @db.VarChar(700) // second legal paragraph (locked)
+  billStampCaption String? @map("bill_stamp_caption") @db.VarChar(40) // e.g. "ZONAL COUNCIL STAMP" (locked)
 
   subscription Subscription?
 

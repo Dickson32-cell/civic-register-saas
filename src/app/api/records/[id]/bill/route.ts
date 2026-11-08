@@ -31,7 +31,7 @@ export async function GET(
   const cid = tenantId();
   const tenant = await prisma.tenant.findUnique({
     where: { id: cid },
-    select: { name: true, logoDataUrl: true, brandingUnlocked: true, billHeadingOverride: true, billFooterNote: true },
+    select: { name: true, logoDataUrl: true, brandingUnlocked: true, billHeadingOverride: true, billFooterNote: true, billTitle: true, billLegal1: true, billLegal2: true, billStampCaption: true },
   });
   return NextResponse.json({
     tenantId: cid,
@@ -41,6 +41,10 @@ export async function GET(
           logoDataUrl: tenant.logoDataUrl ?? null,
           heading: tenant.billHeadingOverride?.trim() ? tenant.billHeadingOverride : null,
           footer: tenant.billFooterNote?.trim() ? tenant.billFooterNote : null,
+          title: tenant.billTitle?.trim() ? tenant.billTitle : null,
+          legal1: tenant.billLegal1?.trim() ? tenant.billLegal1 : null,
+          legal2: tenant.billLegal2?.trim() ? tenant.billLegal2 : null,
+          stamp: tenant.billStampCaption?.trim() ? tenant.billStampCaption : null,
           fallbackName: tenant.name,
         }
       : null,
