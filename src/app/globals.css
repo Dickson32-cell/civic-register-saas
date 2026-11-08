@@ -412,3 +412,16 @@ html[data-theme="dark"] .topbar .mark { background: #ffffff; color: #1c3f6e; }
 @media (min-width: 640px) {
   .topbar > .who:not(.only-desktop) { display: none; }
 }
+
+/* ---------- RESPONSIVE LAYER (Dickson's mobile-button laws, applied platform-wide) ----------
+   1. Touch target: every button label >= 44px on phones — scoped to .btn classes only.
+   2. Form fields get 44px min-height on phones ( Services + Interface + Approvals + signup forms).
+   3. Tablets: the top-bar chip row compresses AND wraps instead of overflowing. */
+@media (max-width: 639px) {
+  .btn { min-height: 44px; }
+  .main input, .main select, .main textarea { min-height: 44px; }
+}
+@media (min-width: 640px) and (max-width: 900px) {
+  .topbar .who.only-desktop { flex-wrap: wrap; gap: 6px; }
+  .topbar .who.only-desktop .btn { padding: 9px 11px; font-size: 12.5px; min-height: 44px; }
+}

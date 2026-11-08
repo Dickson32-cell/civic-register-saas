@@ -4,7 +4,15 @@
 // unlocks later. Sign-in is a quiet button, not a wall.
 // PRIVACY LAW: the landing is product-only — no institution names or logos of
 // customers appear here; their interfaces live behind their logins.
-import { useEffect, useState } from "react";
+// Landing is a pure server-friendly component — no hooks; the react import is removed.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const LSTYLE = `
+@media (max-width: 639px) {
+  .l-main { padding: 26px 16px; }
+  .l-h1 { font-size: 23px !important; }
+  .l-cta-btn { width: 100%; justify-content: center; text-align: center; min-height: 48px; }
+}
+`;
 
 const PAID = [
   ["More staff seats", "Free plan holds 2 staff. Add seats when your team grows."],
@@ -16,7 +24,8 @@ const PAID = [
 export default function Landing() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--navy)", color: "#fff", display: "flex", flexDirection: "column" }}>
-      <header style={{ padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <style>{LSTYLE}</style>
+      <header style={{ padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }} className="l-head">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.jpg" alt="CivicData logo" style={{ width: 40, height: 40, borderRadius: 8, background: "#fff" }} />
@@ -30,8 +39,8 @@ export default function Landing() {
         </a>
       </header>
 
-      <main style={{ maxWidth: 780, margin: "0 auto", padding: "34px 22px", flex: 1 }}>
-        <h1 style={{ fontSize: 30, lineHeight: 1.25, marginBottom: 10 }}>
+      <main style={{ maxWidth: 780, margin: "0 auto", padding: "34px 22px", flex: 1 }} className="l-main">
+        <h1 style={{ fontSize: 30, lineHeight: 1.25, marginBottom: 10 }} className="l-h1">
           Collect data the way the big assemblies do — free.
         </h1>
         <p style={{ fontSize: 15.5, opacity: 0.9, maxWidth: 640, lineHeight: 1.6 }}>
@@ -40,8 +49,8 @@ export default function Landing() {
           every change is audited, and you can work from any phone even with weak network.
         </p>
 
-        <div style={{ display: "flex", gap: 12, margin: "22px 0 30px", flexWrap: "wrap" }}>
-          <a href="/signup" className="btn btn-primary" style={{ background: "#fff", color: "var(--navy)", padding: "12px 22px", fontSize: 15, textDecoration: "none", borderRadius: 8 }}>
+        <div style={{ display: "flex", gap: 12, margin: "22px 0 30px", flexWrap: "wrap" }} className="l-cta-row">
+          <a href="/signup" className="btn btn-primary l-cta-btn" style={{ background: "#fff", color: "var(--navy)", padding: "12px 22px", fontSize: 15, textDecoration: "none", borderRadius: 8 }}>
             Start collecting data — free
           </a>
           <a href="/login" style={{ alignSelf: "center", fontSize: 14, color: "#fff", opacity: 0.8 }}>
