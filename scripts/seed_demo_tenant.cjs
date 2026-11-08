@@ -49,7 +49,7 @@ async function main() {
 
   const hash = await (await import('bcryptjs')).hash(ADMIN_PW, 10);
   await prisma.appUser.upsert({
-    where: { tenantId_username: { tenantId: TENANT, username: 'admin' } },
+    where: { username: 'admin' },
     update: { passwordHash: hash, active: true },
     create: { tenantId: TENANT, username: 'admin', passwordHash: hash, fullName: 'Demo Administrator', role: 'ADMIN', adminLevel: 'FULL', active: true },
   });

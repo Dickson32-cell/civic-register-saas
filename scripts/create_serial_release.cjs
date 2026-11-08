@@ -1,6 +1,6 @@
 
 const {PrismaClient}=require('@prisma/client');const fs=require('fs');
-const url=(fs.readFileSync('E:/RameTech Consultancy jobs/civic-register-saas/PLATFORM-CREDS-LOCAL.txt','utf8').match(/OWNER_URL_DIRECT=(.*)/)||[])[1];
+const url=(fs.readFileSync('E:/RameTech Consultancy jobs/civic-register-saas/PLATFORM-CREDS-LOCAL.txt','utf8').match(/^OWNER_URL_DIRECT=["']?([^"'\r\n]+)["']?/m)||[])[1];
 const p=new PrismaClient({datasources:{db:{url}}});
 (async()=>{
   await p.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS serial_release (

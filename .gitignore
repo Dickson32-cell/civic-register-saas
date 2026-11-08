@@ -19,3 +19,4 @@ devserver.log
 Thumbs.db
 .DS_Store
 *.swp
+.neon
