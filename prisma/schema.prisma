@@ -35,6 +35,8 @@ model Tenant {
   staffSeatLimit   Int     @default(2) @map("staff_seat_limit")  // free plan staff cap
   brandingUnlocked Boolean @default(false) @map("branding_unlocked") // logo upload = paid service
   logoDataUrl      String? @map("logo_data_url")                     // institution logo (unlocked only)
+  billHeadingOverride String? @map("bill_heading_override") @db.VarChar(120) // bill designer (locked)
+  billFooterNote      String? @map("bill_footer_note") @db.VarChar(200)      // bill designer (locked)
 
   subscription Subscription?
 
@@ -51,6 +53,7 @@ model ServiceRequest {
   seats        Int?      // requested staff seats (STAFF_SEATS)
   note         String?   @db.VarChar(300)
   contactPhone String?   @map("contact_phone") @db.VarChar(20)
+  assetDataUrl String?   @map("asset_data_url") // logo attached with the request
   status       String    @default("PENDING") @db.VarChar(10) // PENDING | APPROVED | REJECTED
   decidedBy    String?   @map("decided_by") @db.VarChar(120)
   decidedNote  String?   @map("decided_note") @db.VarChar(300)

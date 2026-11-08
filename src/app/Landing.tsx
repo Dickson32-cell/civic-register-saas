@@ -2,6 +2,8 @@
 // Landing — what a visitor sees on the platform root before any account exists.
 // Collect free; the paid services list is right there so companies know what
 // unlocks later. Sign-in is a quiet button, not a wall.
+// PRIVACY LAW: the landing is product-only — no institution names or logos of
+// customers appear here; their interfaces live behind their logins.
 import { useEffect, useState } from "react";
 
 const PAID = [
@@ -12,27 +14,12 @@ const PAID = [
 ];
 
 export default function Landing() {
-  const [name, setName] = useState<string>("");
-  const [logo, setLogo] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/tenant/branding")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (j) {
-          if (j.name) setName(j.name);
-          setLogo(j.logoDataUrl ?? null);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
   return (
     <div style={{ minHeight: "100vh", background: "var(--navy)", color: "#fff", display: "flex", flexDirection: "column" }}>
       <header style={{ padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logo || "/logo.jpg"} alt="Logo" style={{ width: 40, height: 40, borderRadius: 8, background: "#fff" }} />
+          <img src="/logo.jpg" alt="CivicData logo" style={{ width: 40, height: 40, borderRadius: 8, background: "#fff" }} />
           <div>
             <div style={{ fontWeight: 800, fontSize: 18 }}>CivicData</div>
             <div style={{ fontSize: 11, opacity: 0.75, letterSpacing: 1 }}>DATA COLLECTION PLATFORM</div>
@@ -84,8 +71,8 @@ export default function Landing() {
       </main>
 
       <footer style={{ padding: "16px 22px", fontSize: 12, opacity: 0.6, display: "flex", justifyContent: "space-between" }}>
-        <span>Powered by CivicData — records only, never custody.</span>
-        <span>{name ? `Serving ${name}` : ""}</span>
+        <span>Powered by CivicData — records only, never custody. Your data is visible only through your own logins.</span>
+        <span />
       </footer>
     </div>
   );

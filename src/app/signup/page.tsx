@@ -13,6 +13,17 @@ export default function SignupPage() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [logo, setLogo] = useState<string>("");
+  const [colour, setColour] = useState<string>("");
+
+  const COLOURS = ["#1c3f6e", "#3e7bfa", "#7d3cf5", "#0a6e43", "#b0322a", "#b88721"];
+
+  function fileToDataUrl(file: File | null | undefined) {
+    if (!file) { setLogo(""); return; }
+    const reader = new FileReader();
+    reader.onload = () => setLogo(String(reader.result || ""));
+    reader.readAsDataURL(file);
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,7 +32,7 @@ export default function SignupPage() {
       const res = await fetch("/api/signup-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ org, contact, phone, note: `Areas: ${areas}` }),
+        body: JSON.stringify({ org, contact, phone, areas, colour, logoDataUrl: logo }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) setErr(j.error || "Could not send — try again.");
@@ -72,11 +83,29 @@ export default function SignupPage() {
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required
                 style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15 }} />
             </label>
-            <label className="fld" style={{ display: "block", marginBottom: 14 }}>
+            <label className="fld" style={{ display: "block", marginBottom: 10 }}>
               <span className="cap" style={{ fontSize: 13, fontWeight: 600 }}>Areas / branches you record (optional)</span>
               <input value={areas} onChange={(e) => setAreas(e.target.value)} placeholder="e.g. Central, Riverside, East"
                 style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15 }} />
             </label>
+
+            <div style={{ fontSize: 13, fontWeight: 700, margin: "4px 0 8px" }}>Make it yours</div>
+            <label className="fld" style={{ display: "block", marginBottom: 10 }}>
+              <span className="cap" style={{ fontSize: 13, fontWeight: 600 }}>Interface colour</span>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {COLOURS.map((c) => (
+                  <button key={c} type="button" onClick={() => setColour(c)} aria-label={`colour ${c}`}
+                    style={{ width: 34, height: 34, borderRadius: 8, background: c, border: colour === c ? "3px solid #111" : "1px solid var(--line)", cursor: "pointer" }} />
+                ))}
+              </div>
+            </label>
+            <label className="fld" style={{ display: "block", marginBottom: 14 }}>
+              <span className="cap" style={{ fontSize: 13, fontWeight: 600 }}>Your logo (optional — part of the paid brand service)</span>
+              <input type="file" accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => fileToDataUrl(e.target.files?.[0])}
+                style={{ fontSize: 13, marginTop: 4 }} />
+            </label>
+
             {err && <div style={{ marginBottom: 10, fontSize: 13.5, color: "#b3261e" }}>{err}</div>}
             <button className="btn btn-primary btn-block" disabled={busy} style={{ width: "100%", padding: "12px 0", fontSize: 15 }}>
               {busy ? "Sending…" : "Send my request"}

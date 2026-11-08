@@ -59,6 +59,7 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster,
           <a href="/admin/approvals" className="drawer-item">
             Approvals{pendingCount ? ` (${pendingCount})` : ""}
           </a>
+          <a href="/admin/interface" className="drawer-item">Interface</a>
           <a href="/admin/services" className="drawer-item">Services</a>
           <a href="/admin/users" className="drawer-item">Staff</a>
           <a href="/admin/edits" className="drawer-item">Edits</a>
@@ -111,6 +112,9 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster,
             )}{" "}
             <a href="/admin/approvals" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
               Approvals{pendingCount ? ` (${pendingCount})` : ""}
+            </a>{" "}
+            <a href="/admin/interface" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+              Interface
             </a>{" "}
             <a href="/admin/services" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
               Services

@@ -77,7 +77,12 @@ export default function ServiceRequestsCard() {
               {r.contactPhone && <span style={{ fontSize: 13 }}>📞 {r.contactPhone}</span>}
               <span style={{ fontSize: 12, color: "var(--muted)" }}>{new Date(r.createdAt).toLocaleString()}</span>
             </div>
-            {r.note && <div style={{ fontSize: 13, marginTop: 4 }}>Note: {r.note}</div>}
+            {r.kind === "ONBOARDING" && (
+              <div style={{ fontSize: 13, marginTop: 4 }}>
+                New institution wants a workspace — set it up, then approve this request when their login is ready.
+              </div>
+            )}
+            {r.note && <div style={{ fontSize: 13, marginTop: 4 }}>Details: {r.note}</div>}
             <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
               {r.kind === "STAFF_SEATS" && (
                 <input

@@ -30,13 +30,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not permitted" }, { status: 403 });
 
   try {
-    const { logoDataUrl, colour } = await req.json();
+    const { logoDataUrl, colour, name, billHeading, billFooter } = await req.json();
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId() },
       select: { brandingUnlocked: true, logoDataUrl: true },
     });
 
     const data: Record<string, string> = {};
+
+    // free: institution display name
+    if (name !== undefined) {
+      const n = String(name).trim();
+      if (n.length < 2 || n.length > 120)
+        return NextResponse.json({ error: "Name must be 2-120 characters" }, { status: 400 });
+      data.name = n;
+    }
+
+    // free: interface colour
+    if (colour !== undefined) {
+      if (typeof colour !== "string" || !/^#[0-9a-fA-F]{6}$/.test(colour))
+        return NextResponse.json({ error: "Colour must be a hex value like #1c3f6e" }, { status: 400 });
+      data.colour = colour;
+    }
+
+    // PAID: bill designer text fields (gate = branding service)
+    if (billHeading !== undefined || billFooter !== undefined) {
+      if (!tenant?.brandingUnlocked)
+        return NextResponse.json(
+          { error: "The bill designer is a paid service. Request it under Admin > Services." },
+          { status: 403 }
+        );
+      if (billHeading !== undefined) {
+        const h = typeof billHeading === "string" ? billHeading.trim().slice(0, 120) : "";
+        data.billHeadingOverride = h; // empty string = fall back to institution name
+      }
+      if (billFooter !== undefined) {
+        const f = typeof billFooter === "string" ? billFooter.trim().slice(0, 200) : "";
+        data.billFooterNote = f;
+      }
+    }
 
     if (logoDataUrl !== undefined) {
       const isDataUrl = typeof logoDataUrl === "string" && /^data:image\/(png|jpe?g|webp);base64,/.test(logoDataUrl);

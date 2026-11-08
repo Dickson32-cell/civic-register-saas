@@ -29,9 +29,21 @@ export async function GET(
   const totalDue = r.status === "PAID" ? 0 : Math.max(0, Number((billed - paid).toFixed(2)));
 
   const cid = tenantId();
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: cid },
+    select: { name: true, logoDataUrl: true, brandingUnlocked: true, billHeadingOverride: true, billFooterNote: true },
+  });
   return NextResponse.json({
     tenantId: cid,
     councilName: COUNCIL_NAMES[cid] ?? "Zonal Council",
+    brand: tenant?.brandingUnlocked
+      ? {
+          logoDataUrl: tenant.logoDataUrl ?? null,
+          heading: tenant.billHeadingOverride?.trim() ? tenant.billHeadingOverride : null,
+          footer: tenant.billFooterNote?.trim() ? tenant.billFooterNote : null,
+          fallbackName: tenant.name,
+        }
+      : null,
     customer: {
       id: r.serialNumber,
       name: r.name,

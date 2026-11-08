@@ -28,6 +28,7 @@ export async function GET() {
     take: 100,
     include: { tenant: { select: { name: true } } },
   });
+  void ALL_TENANTS_FALLBACK;
 
   return NextResponse.json({
     requests: rows.map((r) => ({
@@ -38,6 +39,7 @@ export async function GET() {
       seats: r.seats,
       note: r.note,
       contactPhone: r.contactPhone,
+      hasAsset: Boolean(r.assetDataUrl),
       status: r.status,
       decidedNote: r.decidedNote,
       createdAt: r.createdAt,
@@ -66,7 +68,11 @@ export async function PATCH(req: NextRequest) {
           return NextResponse.json({ error: "Give a seat count greater than the free 2" }, { status: 400 });
         await masterPrisma.tenant.update({ where: { id: row.tenantId }, data: { staffSeatLimit: n } });
       } else if (row.kind === "BRANDING") {
-        await masterPrisma.tenant.update({ where: { id: row.tenantId }, data: { brandingUnlocked: true } });
+        // branding unlock applies the attached logo (from a signup request) too
+        await masterPrisma.tenant.update({
+          where: { id: row.tenantId },
+          data: { brandingUnlocked: true, ...(row.assetDataUrl ? { logoDataUrl: row.assetDataUrl } : {}) },
+        });
       }
     }
 

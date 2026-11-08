@@ -15,6 +15,12 @@ export type BillData = {
     description: string;
   };
   printedOn: string;
+  brand?: {
+    logoDataUrl: string | null;
+    heading: string | null;
+    footer: string | null;
+    fallbackName?: string | null;
+  } | null;
 };
 
 const GHS = (n: number) => n.toFixed(2);
@@ -32,6 +38,14 @@ function formatDate(iso: string): string {
 export default function BillSheet({ data, directorName, orientation = "portrait" }: { data: BillData; directorName?: string; orientation?: "portrait" | "landscape" }) {
   const { customer, bill } = data;
   const printed = formatDate(data.printedOn);
+  const brand = data.brand ?? null;
+  const logoSrc = brand?.logoDataUrl || "/assembly-logo.jpg";
+  const headingLine = brand?.heading?.trim()
+    ? brand.heading.trim().toUpperCase()
+    : brand?.fallbackName?.trim()
+      ? brand.fallbackName.trim().toUpperCase()
+      : data.councilName.toUpperCase();
+  const payLine = brand?.footer?.trim() ? brand.footer.trim().toUpperCase() : "PAY BEFORE 31ST MARCH, 2027 TO AVOID PENALTY";
   return (
     <div className="bill-sheet">
       <style>{`
@@ -79,17 +93,17 @@ export default function BillSheet({ data, directorName, orientation = "portrait"
         {/* WATERMARK: assembly logo behind all content */}
         <div className="bill-watermark" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assembly-logo.jpg" alt="" />
+          <img src={logoSrc} alt="" />
         </div>
         <div className="bill-head">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assembly-logo.jpg" alt="Assembly logo" className="logo" />
+          <img src={logoSrc} alt="Institution logo" className="logo" />
           <div className="htxt">
-            {data.councilName.toUpperCase()}
+            {headingLine}
             <br />
             <span className="sub">TEMPORAL STRUCTURES BILL</span>
             <br />
-            <span className="sub">PAY BEFORE 31ST MARCH, 2027 TO AVOID PENALTY</span>
+            <span className="sub">{payLine}</span>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/coat-of-arms.jpg" alt="Ghana coat of arms" className="logo" />
@@ -169,12 +183,12 @@ export default function BillSheet({ data, directorName, orientation = "portrait"
       <div className="bill-stub">
         <div className="stub-logos" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assembly-logo.jpg" alt="Assembly logo" style={{ width: 40, height: 40, objectFit: "contain" }} />
+          <img src={logoSrc} alt="Institution logo" style={{ width: 40, height: 40, objectFit: "contain" }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/coat-of-arms.jpg" alt="Ghana coat of arms" style={{ width: 48, height: 36, objectFit: "contain" }} />
         </div>
         <div className="stub-contact">
-          {data.councilName.toUpperCase()}<br />
+          {headingLine}<br />
           TEMPORAL STRUCTURES BILL<br /><br />
           <b>{customer.name.toUpperCase()} — {customer.businessName.toUpperCase()}</b><br />
           TEL NO: {customer.telephone}<br />

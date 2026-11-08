@@ -105,8 +105,10 @@ export default function MasterPage() {
       )}
 
       <h2 style={{ fontSize: 16, margin: "26px 0 8px" }}>Download all databases (Excel)</h2>
-      <p className="sub" style={{ fontSize: 12.5 }}>One workbook with every council&apos;s complete register and payment history — active and deleted records. Only the primary admin can download this.</p>
-      <a className="btn btn-primary" href="/api/master/export" style={{ display: "inline-block", textDecoration: "none", marginTop: 6 }}>Download all councils (.xlsx)</a>
+      <p className="sub" style={{ fontSize: 12.5 }}>
+        PRIVACY: customer records are private to each institution on this platform — the console
+        shows operation counts only, never raw records.
+      </p>
 
       <ServiceRequestsCard />
     </div>
