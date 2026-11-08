@@ -8,7 +8,7 @@
 // (403 otherwise); the module must be configured via env (400 'not configured').
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getFullUser, councilId, prisma } from "@/lib/db";
+import { getFullUser, tenantId, prisma } from "@/lib/db";
 import { permsFor } from "@/lib/perms";
 import {
   SMS_TYPES, SMS_TEXTS, SMS_SENDER_ID, SmsType, smsConfigured,
@@ -21,7 +21,7 @@ const MAX_PER_PRESS = 40; // keep each press well under the serverless timeout; 
 async function guard() {
   const session = await getSession();
   if (!session) return { err: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  if (councilId() !== SMS_COUNCIL)
+  if (tenantId() !== SMS_COUNCIL)
     return { err: NextResponse.json({ error: "Not found" }, { status: 404 }) };
   const me = await getFullUser(session);
   if (!me || me.role !== "ADMIN" || permsFor(me.role, me.adminLevel).canManageUsers !== true)
@@ -66,11 +66,11 @@ export async function POST(req: NextRequest) {
   if (body.recordId) {
     const rid = String(body.recordId);
     const rec = await prisma.feePayer.findFirst({
-      where: { councilId: SMS_COUNCIL, id: rid, recordStatus: "ACTIVE" },
+      where: { tenantId: SMS_COUNCIL, id: rid, recordStatus: "ACTIVE" },
       select: { id: true, name: true, serialNumber: true, telephone: true, electoralArea: true },
     });
     if (!rec) return NextResponse.json({ error: "Record not found in this register" }, { status: 404 });
-    const st = await prisma.smsSend.findUnique({ where: { councilId_recordId_type: { councilId: SMS_COUNCIL, recordId: rid, type } } });
+    const st = await prisma.smsSend.findUnique({ where: { tenantId_recordId_type: { tenantId: SMS_COUNCIL, recordId: rid, type } } });
     if (st && st.status === "SENT" && !dryRun)
       return NextResponse.json({ error: "This record already received this message (each record gets a type once)" }, { status: 409 });
     const phone = normalizePhone(rec.telephone || "");
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     await markSms(SMS_COUNCIL, rid, type as SmsType, phone, s);
     await prisma.auditLog.create({
       data: {
-        councilId: councilId(),
+        tenantId: tenantId(),
         userId: g.sub,
         action: "SINGLE_SMS",
         entityType: "fee_payer",
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
   const sent: Array<{ id: string; serial: string | null; phone: string; name: string }> = [];
   const failed: Array<{ id: string; serial: string | null; phone: string; error: string }> = [];
   const existing = await prisma.smsSend.findMany({
-    where: { councilId: SMS_COUNCIL, type },
+    where: { tenantId: SMS_COUNCIL, type },
     select: { recordId: true, status: true },
   });
   const state = new Map(existing.map((s) => [s.recordId, s.status]));
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
 
   await prisma.auditLog.create({
     data: {
-      councilId: councilId(),
+      tenantId: tenantId(),
       userId: g.sub,
       action: "BULK_SMS",
       entityType: "fee_payer",

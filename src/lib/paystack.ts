@@ -27,10 +27,10 @@ export function paystackConfigured(): boolean {
 //   PS|<ref>|<hmac16>   hmac16 = HMAC-SHA256(LICENSE_SECRET, `${id}|${ref}`)
 // Proves the unlock came from a verified Paystack payment, not a typed key.
 // ---------------------------------------------------------------------------
-function receiptStamp(councilId: string, ref: string, amountPesewas: number): string {
+function receiptStamp(tenantId: string, ref: string, amountPesewas: number): string {
   const mac = crypto
     .createHmac("sha256", process.env.LICENSE_SECRET || "")
-    .update(`${councilId}|${ref}|${amountPesewas}`)
+    .update(`${tenantId}|${ref}|${amountPesewas}`)
     .digest("hex")
     .slice(0, 16)
     .toUpperCase();
@@ -126,7 +126,7 @@ export async function handleChargeSuccess(body: any, signature: string | null) {
   });
   await prisma.auditLog.create({
     data: {
-      councilId: council,
+      tenantId: council,
       userId: null,
       action: "LICENSE_PAYSTACK_PAID",
       entityType: "license_state",

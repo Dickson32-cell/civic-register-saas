@@ -38,9 +38,9 @@ export default function LoginPage() {
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.jpg" alt="Adweso Zonal Council logo" className="logo-lg" />
-        <h1>Adweso Zonal Council</h1>
-        <p>Temporal Structures Fee Register — staff sign in</p>
+        <img src="/logo.jpg" alt="CivicData logo" className="logo-lg" />
+        <h1>CivicData</h1>
+        <p>Data collection platform — sign in</p>
 
         {err && <div className="err">{err}</div>}
 

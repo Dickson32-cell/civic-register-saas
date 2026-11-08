@@ -6,7 +6,7 @@ import {
   prisma,
   ELECTORAL_AREAS,
   areaCode,
-  councilId,
+  tenantId,
   formatSerial,
   getFullUser,
 } from "@/lib/db";
@@ -32,14 +32,14 @@ async function allocateSerialAtomic(area: string): Promise<string> {
   const released = await prisma.$queryRawUnsafe<{ serial_number: string }[]>(
     `UPDATE serial_release SET status = 'USED', used_at = now()
        WHERE id = (SELECT id FROM serial_release
-                    WHERE council_id = $1 AND electoral_area = $2 AND status = 'AVAILABLE'
+                    WHERE tenant_id = $1 AND electoral_area = $2 AND status = 'AVAILABLE'
                     ORDER BY number LIMIT 1 FOR UPDATE SKIP LOCKED)
      RETURNING serial_number`,
-    councilId(), area
+    tenantId(), area
   );
   if (released.length > 0) return released[0].serial_number;
   const updated = await prisma.serialCounter.update({
-    where: { councilId_electoralArea: { councilId: councilId(), electoralArea: area } },
+    where: { tenantId_electoralArea: { tenantId: tenantId(), electoralArea: area } },
     data: { lastNumber: { increment: 1 } },
   });
   return formatSerial(code, updated.lastNumber);
@@ -50,7 +50,7 @@ async function generateSerialInTx(tx: Tx, area: string): Promise<string> {
   const code = areaCode(area);
   if (!code) throw new Error("Unknown area");
   const updated = await tx.serialCounter.update({
-    where: { councilId_electoralArea: { councilId: councilId(), electoralArea: area } },
+    where: { tenantId_electoralArea: { tenantId: tenantId(), electoralArea: area } },
     data: { lastNumber: { increment: 1 } },
   });
   return formatSerial(code, updated.lastNumber);
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       errors.push("Container category does not match the container type");
     if (errors.length) {
       // Diagnostic breadcrumb (no customer names printed).
-      console.log(JSON.stringify({ op: "CREATE_REJECTED", council: councilId(), errors,
+      console.log(JSON.stringify({ op: "CREATE_REJECTED", council: tenantId(), errors,
         fieldShapes: { telephoneLen: telephone ? String(telephone).length : 0,
           telephoneHead: telephone ? String(telephone).slice(0, 3) : "", area: electoralArea || "",
           feeRaw: fee === undefined ? "absent" : String(fee), hasBusinessName: !!String(businessName || "").trim(),
@@ -123,12 +123,12 @@ export async function POST(req: NextRequest) {
     }
 
     // OFFLINE DEDUPE: a retry (lost/duplicate sync) returns the record that already
-    // exists. Combined with the (council_id, pending_id) unique index, double entries
+    // exists. Combined with the (tenant_id, pending_id) unique index, double entries
     // are impossible even on flaky networks.
     const pendingIdRaw = body.pendingId ? String(body.pendingId) : "";
     pendingId = /^[A-Za-z0-9._:-]{8,64}$/.test(pendingIdRaw) ? pendingIdRaw : "";
     if (pendingId) {
-      const dup = await prisma.feePayer.findFirst({ where: { councilId: councilId(), pendingId } });
+      const dup = await prisma.feePayer.findFirst({ where: { tenantId: tenantId(), pendingId } });
       if (dup)
         return NextResponse.json(
           { ok: true, duplicate: true, record: { id: dup.id, serialNumber: dup.serialNumber, name: dup.name } },
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         prisma.$transaction(async (tx) => {
           const created = await tx.feePayer.create({
             data: {
-              councilId: councilId(),
+              tenantId: tenantId(),
               pendingId: pendingId || null,
               createdBy: session.sub,
               serialNumber: serial,
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
           // Opening billing entry (the typed fee) — keeps the ledger truthful
           await tx.fee.create({
             data: {
-              councilId: councilId(),
+              tenantId: tenantId(),
               feePayerId: created.id,
               amount: feeNum.toFixed(2),
               description: "Opening fee (temporal structure)",
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
 
           await tx.auditLog.create({
             data: {
-              councilId: councilId(),
+              tenantId: tenantId(),
               userId: session.sub,
               action: "CREATE_RECORD",
               entityType: "fee_payer",
@@ -233,7 +233,7 @@ export async function POST(req: NextRequest) {
       pendingId
     ) {
       const dup = await prisma.feePayer
-        .findFirst({ where: { councilId: councilId(), pendingId } })
+        .findFirst({ where: { tenantId: tenantId(), pendingId } })
         .catch(() => null);
       if (dup)
         return NextResponse.json(

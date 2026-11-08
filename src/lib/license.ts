@@ -8,7 +8,7 @@
 // count, so one council's key cannot unlock another council's register.
 
 import crypto from "crypto";
-import { prisma, councilId } from "./db";
+import { prisma, tenantId } from "./db";
 
 export const FREE_LIMIT = 100;      // registrations allowed before lock
 export const LICENSE_FEE_USD = Number(process.env.LICENSE_FEE_USD || 6.99); // price per 100 registrations
@@ -22,16 +22,16 @@ export const LICENSE_FEE_USD = Number(process.env.LICENSE_FEE_USD || 6.99); // p
 
 export async function getLicenseState() {
   return prisma.licenseState.upsert({
-    where: { id: councilId() },
+    where: { id: tenantId() },
     update: {},
-    create: { id: councilId(), paidThrough: 0 },
+    create: { id: tenantId(), paidThrough: 0 },
   });
 }
 
 export async function countActiveRegistrations() {
   // Soft-deleted records do NOT count toward the license (fair to councils);
   // serial gaps from tests remain but ACTIVE rows are what matters.
-  return prisma.feePayer.count({ where: { councilId: councilId(), recordStatus: "ACTIVE" } });
+  return prisma.feePayer.count({ where: { tenantId: tenantId(), recordStatus: "ACTIVE" } });
 }
 
 export type LicenseStatus = {
@@ -61,7 +61,7 @@ export async function licenseStatus(): Promise<LicenseStatus> {
 }
 
 // ---------------------------------------------------------------------------
-// Key derivation: HMAC(councilSecret, `${councilId}:${paidThrough}`).
+// Key derivation: HMAC(councilSecret, `${tenantId}:${paidThrough}`).
 // The secret lives ONLY in the server env — councils cannot forge keys.
 // ---------------------------------------------------------------------------
 
@@ -71,10 +71,10 @@ function councilSecret(): string {
   return s;
 }
 
-export function deriveKey(councilId: string, paidThrough: number): string {
+export function deriveKey(tenantId: string, paidThrough: number): string {
   const mac = crypto
     .createHmac("sha256", councilSecret())
-    .update(`${councilId}:${paidThrough}`)
+    .update(`${tenantId}:${paidThrough}`)
     .digest("hex")
     .slice(0, 16)
     .toUpperCase();
@@ -82,9 +82,9 @@ export function deriveKey(councilId: string, paidThrough: number): string {
   return mac.replace(/(.{4})(.{4})(.{4})(.{4})/, "$1-$2-$3-$4");
 }
 
-export function verifyKey(councilId: string, paidThrough: number, key: string): boolean {
+export function verifyKey(tenantId: string, paidThrough: number, key: string): boolean {
   const normalized = key.trim().toUpperCase().replace(/\s+/g, "");
-  return deriveKey(councilId, paidThrough) === normalized;
+  return deriveKey(tenantId, paidThrough) === normalized;
 }
 
 // ---------------------------------------------------------------------------
@@ -115,7 +115,7 @@ function keyRateCheck(council: string): { ok: boolean; retryInMin: number } {
 async function auditKeyAttempt(council: string, applied: boolean, detail: object) {
   await prisma.auditLog.create({
     data: {
-      councilId: council,
+      tenantId: council,
       userId: null,
       action: applied ? "LICENSE_KEY_APPLIED" : "LICENSE_KEY_REJECTED",
       entityType: "license_state",
@@ -128,7 +128,7 @@ async function auditKeyAttempt(council: string, applied: boolean, detail: object
 // Apply a paid unlock: raises paidThrough by FREE_LIMIT (one payment = 100 more
 // registrations) and stores the key that unlocked it.
 export async function applyUnlockKey(councilKey: string, key: string) {
-  // councilKey = this deployment's COUNCIL_ID (from the license API route)
+  // councilKey = this deployment's TENANT_ID (from the license API route)
   const rl = keyRateCheck(councilKey);
   if (!rl.ok) {
     return { ok: false as const, error: `Too many key attempts. Try again in ${rl.retryInMin} minutes.` };

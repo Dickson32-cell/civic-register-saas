@@ -7,7 +7,7 @@ import { paystackConfigured } from "@/lib/paystack";
 import { getSession } from "@/lib/auth";
 
 // Council identity — set per deployment via env so each clone is distinct
-const COUNCIL_ID = process.env.COUNCIL_ID || "adweso";
+const TENANT_ID = process.env.TENANT_ID || "adweso";
 
 export async function GET() {
   const session = await getSession();
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { key } = await req.json().catch(() => ({ key: "" }));
   if (!key) return NextResponse.json({ error: "Key required" }, { status: 400 });
-  const result = await applyUnlockKey(COUNCIL_ID, String(key));
+  const result = await applyUnlockKey(TENANT_ID, String(key));
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 403 });
   return NextResponse.json({ ok: true, paidThrough: result.paidThrough, status: await licenseStatus() });
 }

@@ -1,7 +1,7 @@
 // Home = the register (server component guards the session)
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getFullUser, councilId } from "@/lib/db";
+import { getFullUser, tenantId } from "@/lib/db";
 import { permsFor } from "@/lib/perms";
 import RegisterTable from "./RegisterTable";
 import SmsPanel from "./SmsPanel";
@@ -22,7 +22,7 @@ export default async function HomePage() {
     <div className="shell">
       <TopBar username={me.username} role={me.role} canReviewPasswords={perms.canReviewPasswords} showMaster={isMasterDeployment()} />
       <main className="main">
-        {councilId() === "adweso" && perms.canManageUsers === true && (
+        {tenantId() === "adweso" && perms.canManageUsers === true && (
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
             <SmsPanel allowed={true} />
           </div>
@@ -34,7 +34,7 @@ export default async function HomePage() {
           canEditDirect={perms.canEditRecords}
           canCreate={perms.canCreateRecords}
           canPay={perms.canRecordPayments}
-          smsSendable={councilId() === "adweso" && perms.canManageUsers === true}
+          smsSendable={tenantId() === "adweso" && perms.canManageUsers === true}
           currentUsername={me.username}
         />
         <LicenseGate />

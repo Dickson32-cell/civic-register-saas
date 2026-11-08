@@ -4,9 +4,10 @@
 // Features: every council's license status (shared multi-council DB),
 // key generator for any council/tier, Excel download of ALL councils.
 import { useCallback, useEffect, useState } from "react";
+import ServiceRequestsCard from "./ServiceRequestsCard";
 
 type CouncilStatus = {
-  councilId: string;
+  tenantId: string;
   registered: number;
   paidThrough: number;
   remainingFree: number;
@@ -38,10 +39,10 @@ export default function MasterPage() {
     const res = await fetch("/api/master", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "keygen", councilId: genCouncil }),
+      body: JSON.stringify({ action: "keygen", tenantId: genCouncil }),
     });
     const d = await res.json();
-    if (res.ok) setGenKey(`${d.key}   — unlocks registrations ${d.currentPaidThrough + 1} to ${d.keyTIER} for ${d.councilId}`);
+    if (res.ok) setGenKey(`${d.key}   — unlocks registrations ${d.currentPaidThrough + 1} to ${d.keyTIER} for ${d.tenantId}`);
     else setGenKey(d.error || "failed");
     setBusy(false);
   }
@@ -50,7 +51,7 @@ export default function MasterPage() {
   if (!data) return <div style={{ padding: 40 }}>Loading…</div>;
 
   const councils = data.councils.map((c) => ({
-    id: c.councilId,
+    id: c.tenantId,
     registered: c.registered,
     paidThrough: c.paidThrough,
     locked: c.locked as boolean | null,
@@ -106,6 +107,8 @@ export default function MasterPage() {
       <h2 style={{ fontSize: 16, margin: "26px 0 8px" }}>Download all databases (Excel)</h2>
       <p className="sub" style={{ fontSize: 12.5 }}>One workbook with every council&apos;s complete register and payment history — active and deleted records. Only the primary admin can download this.</p>
       <a className="btn btn-primary" href="/api/master/export" style={{ display: "inline-block", textDecoration: "none", marginTop: 6 }}>Download all councils (.xlsx)</a>
+
+      <ServiceRequestsCard />
     </div>
   );
 }

@@ -1,1 +1,21 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+
+# dependencies & builds
+node_modules/
+.next/
+out/
 civic_platform/
+
+# local creds & logs (platform convention: *-LOCAL.txt carries credentials)
+*-LOCAL*.txt
+*.log
+prodserver.log
+devserver.log
+
+# OS/editor junk
+Thumbs.db
+.DS_Store
+*.swp

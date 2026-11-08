@@ -1,9 +1,9 @@
 // GET /api/records/[id]/bill — bill data for the printable Assembly-style bill.
 // Returns everything the bill page needs; BOP stays 0 until a mandate says otherwise.
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, councilId } from "@/lib/db";
+import { prisma, tenantId } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { COUNCIL_NAMES } from "@/lib/councils";
+import { COUNCIL_NAMES } from "@/lib/tenants";
 
 import { BASIC_RATE_2027 } from "@/lib/frrRates";
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
 
   const { id } = await params;
   const r = await prisma.feePayer.findFirst({
-    where: { id, councilId: councilId(), recordStatus: "ACTIVE" },
+    where: { id, tenantId: tenantId(), recordStatus: "ACTIVE" },
     include: {
       fees: { orderBy: { billedAt: "asc" } },
       payments: { orderBy: { receivedAt: "asc" } },
@@ -28,9 +28,9 @@ export async function GET(
   const paid = r.payments.reduce((s, p) => s + Number(p.amount), 0);
   const totalDue = r.status === "PAID" ? 0 : Math.max(0, Number((billed - paid).toFixed(2)));
 
-  const cid = councilId();
+  const cid = tenantId();
   return NextResponse.json({
-    councilId: cid,
+    tenantId: cid,
     councilName: COUNCIL_NAMES[cid] ?? "Zonal Council",
     customer: {
       id: r.serialNumber,

@@ -47,9 +47,9 @@ export default function RegisterPage() {
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.jpg" alt="Adweso Zonal Council logo" className="logo-lg" />
+        <img src="/logo.jpg" alt="CivicData logo" className="logo-lg" />
         <h1>Staff Registration</h1>
-        <p>Adweso Zonal Council — Temporal Structures Fee Register</p>
+        <p>CivicData — Data Collection Platform</p>
 
         {err.length > 0 && <div className="err">{err.map((x, i) => <div key={i}>{x}</div>)}</div>}
         {done && (

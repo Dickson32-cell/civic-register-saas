@@ -1,7 +1,7 @@
 // GET  /api/admin/users — list all users (admin only)
 // PATCH /api/admin/users — approve/reject/deactivate/reactivate/makeAdmin/setAdminLevel/delete
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, councilId, audit, getFullUser } from "@/lib/db";
+import { prisma, tenantId, audit, getFullUser } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { ADMIN_LEVELS, AdminLevel, permsFor } from "@/lib/perms";
 
@@ -12,19 +12,19 @@ export async function GET() {
     return NextResponse.json({ error: "Administrators only" }, { status: 403 });
 
     const users = await prisma.appUser.findMany({
-    where: { councilId: councilId() },
+    where: { tenantId: tenantId() },
     orderBy: { createdAt: "asc" },
     select: {
       id: true, username: true, fullName: true,
       role: true, adminLevel: true, active: true, createdAt: true,
-      viewerAreas: true,
+      viewerAreas: true, approvedAt: true,
     },
   });
 
   // Records created per user (from the audit trail)
   const counts = await prisma.auditLog.groupBy({
     by: ["userId"],
-    where: { action: "CREATE_RECORD", councilId: councilId(), userId: { not: null } },
+    where: { action: "CREATE_RECORD", tenantId: tenantId(), userId: { not: null } },
     _count: { _all: true },
   });
   const countMap = new Map(counts.map((c) => [c.userId, c._count._all]));
@@ -48,13 +48,30 @@ export async function PATCH(req: NextRequest) {
     if (!userId || !action)
       return NextResponse.json({ error: "userId and action required" }, { status: 400 });
 
-    const target = await prisma.appUser.findFirst({ where: { id: userId, councilId: councilId() } });
+    const target = await prisma.appUser.findFirst({ where: { id: userId, tenantId: tenantId() } });
     if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
     if (target.username === "admin" && action !== "deactivate" && action !== "reactivate")
       return NextResponse.json(
         { error: "The primary admin account cannot be modified this way" },
         { status: 400 }
       );
+    // Free-plan staff cap: approving a new staff consumes a seat.
+    if (action === "approve") {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId() },
+        select: { staffSeatLimit: true, name: true },
+      });
+      const activeStaff = await prisma.appUser.count({
+        where: { tenantId: tenantId(), role: "STAFF", active: true, approvedAt: { not: null } },
+      });
+      if (tenant && activeStaff >= tenant.staffSeatLimit)
+        return NextResponse.json(
+          {
+            error: `The free plan holds ${tenant.staffSeatLimit} staff accounts (${tenant.name} has ${activeStaff}). Request more staff seats under Admin > Services.`,
+          },
+          { status: 403 }
+        );
+    }
     if (target.id === session.sub && (action === "deactivate"))
       return NextResponse.json(
         { error: "You cannot deactivate your own account" },
@@ -63,10 +80,11 @@ export async function PATCH(req: NextRequest) {
 
     let data: Record<string, unknown> = {};
     switch (action) {
-      case "approve": data = { active: true, role: "STAFF", adminLevel: null }; break;
+      case "approve": data = { active: true, role: "STAFF", adminLevel: null, approvedAt: new Date() }; break;
       case "makeAdmin":
         data = {
           active: true,
+          approvedAt: new Date(),
           role: "ADMIN",
           adminLevel: ADMIN_LEVELS.includes(body.adminLevel as AdminLevel)
             ? body.adminLevel
@@ -80,7 +98,7 @@ export async function PATCH(req: NextRequest) {
           return NextResponse.json({ error: "The primary admin is always FULL" }, { status: 400 });
         data = { adminLevel: body.adminLevel };
         break;
-      case "reject":
+      case "reject": data = { active: false, approvedAt: new Date() }; break; // decision MADE — stays out of the approvals queue
       case "deactivate": data = { active: false }; break;
       case "reactivate": data = { active: true }; break;
       case "delete":
@@ -96,7 +114,7 @@ export async function PATCH(req: NextRequest) {
           await tx.appUser.delete({ where: { id: target.id } });
           await tx.auditLog.create({
             data: {
-              councilId: councilId(),
+              tenantId: tenantId(),
               userId: me.id,
               action: "USER_DELETED",
               entityType: "app_user",
@@ -130,6 +148,7 @@ export async function PATCH(req: NextRequest) {
       const u = await tx.appUser.update({ where: { id: userId }, data });
       await tx.auditLog.create({
         data: {
+          tenantId: await tenantId(),
           userId: session.sub,
           action: `USER_${String(action).toUpperCase()}`,
           entityType: "app_user",

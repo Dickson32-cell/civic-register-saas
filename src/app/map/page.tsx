@@ -8,7 +8,7 @@ import { permsFor } from "@/lib/perms";
 import TopBar from "../TopBar";
 import MapClient from "../MapClient";
 
-export const metadata = { title: "Map - Adweso Zonal Council Register" };
+export const metadata = { title: "Map - CivicData Register" };
 
 export default async function MapPage() {
   const session = await getSession();

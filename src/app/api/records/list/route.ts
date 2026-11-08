@@ -1,7 +1,7 @@
 // GET /api/records — the register list with computed money columns,
 // area filters, search, per-area summaries AND GRAND TOTALS.
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, councilId, getFullUser } from "@/lib/db";
+import { prisma, tenantId, getFullUser } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 import { BASIC_RATE_2027 } from "@/lib/frrRates";
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       viewerScope = _me.viewerAreas.filter((a) => typeof a === "string" && a.length > 0);
   }
 
-  const where: Record<string, unknown> = { recordStatus: "ACTIVE", councilId: councilId() };
+  const where: Record<string, unknown> = { recordStatus: "ACTIVE", tenantId: tenantId() };
   if (area) where.electoralArea = area;
   if (viewerScope.length) {
     if (area) where.electoralArea = viewerScope.includes(area) ? area : { in: [] };

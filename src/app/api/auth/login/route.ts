@@ -2,7 +2,7 @@
 // Rate-limited: 5 attempts per username+IP per 15 minutes.
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma, councilId, createSessionToken, audit } from "@/lib/db";
+import { prisma, tenantId, createSessionToken, audit } from "@/lib/db";
 import { SESSION_COOKIE } from "@/lib/auth";
 import { loginRateCheck, loginRateClear } from "@/lib/rateLimit";
 
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await prisma.appUser.findUnique({
-      where: { councilId_username: { councilId: councilId(), username } },
+      where: { tenantId_username: { tenantId: tenantId(), username } },
     });
     if (!user || !user.active) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });

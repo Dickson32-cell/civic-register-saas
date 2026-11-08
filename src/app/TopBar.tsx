@@ -1,6 +1,6 @@
 "use client";
 // TopBar — logo + brand + user + Change Password + admin links + logout
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
@@ -13,6 +13,20 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster 
   const [pwMsg, setPwMsg] = useState("");
   const [pwErr, setPwErr] = useState("");
   const [pwBusy, setPwBusy] = useState(false);
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+
+  // Approvals badge — how many decisions wait in Staff/Edits/Passwords queues.
+  useEffect(() => {
+    if (role !== "ADMIN") return;
+    let stop = false;
+    const load = () => fetch("/api/admin/approvals")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (!stop && j?.counts) setPendingCount(j.counts.total as number); })
+      .catch(() => {});
+    load();
+    const t = setInterval(load, 90000);
+    return () => { stop = true; clearInterval(t); };
+  }, [role]);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -42,6 +56,10 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster 
       {role === "ADMIN" && (
         <>
           {username === "admin" && showMaster && <a href="/master" className="drawer-item">Master</a>}
+          <a href="/admin/approvals" className="drawer-item">
+            Approvals{pendingCount ? ` (${pendingCount})` : ""}
+          </a>
+          <a href="/admin/services" className="drawer-item">Services</a>
           <a href="/admin/users" className="drawer-item">Staff</a>
           <a href="/admin/edits" className="drawer-item">Edits</a>
           {canReviewPasswords && <a href="/admin/passwords" className="drawer-item">Passwords</a>}
@@ -57,10 +75,10 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster 
     <header className="topbar" style={{ position: "relative", paddingBottom: pwOpen ? 290 : undefined }}>
       <div className="brand">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.jpg" alt="Adweso Zonal Council logo" className="brand-logo" />
+        <img src="/logo.jpg" alt="CivicData logo" className="brand-logo" />
         <div>
-          <div className="t1">Adweso Zonal Council</div>
-          <div className="t2">Temporal Structures Fee Register</div>
+          <div className="t1">CivicData</div>
+          <div className="t2">Data collection platform</div>
         </div>
       </div>
       <div className="who">
@@ -81,34 +99,40 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster 
       {/* Desktop/tablet inline buttons — hidden on phones (drawer replaces them) */}
       <div className="who only-desktop">
         <b>{username}</b> · {role === "ADMIN" ? "Administrator" : "Staff"} &nbsp;{" "}
-        <a href="/map" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "#2c6e4b" }}>
+        <a href="/map" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
           Map
         </a>{" "}
         {role === "ADMIN" && (
           <>
             {username === "admin" && showMaster && (
-              <a href="/master" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "#2c6e4b" }}>
+              <a href="/master" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
                 Master
               </a>
             )}{" "}
-            <a href="/admin/users" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "#2c6e4b" }}>
+            <a href="/admin/approvals" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+              Approvals{pendingCount ? ` (${pendingCount})` : ""}
+            </a>{" "}
+            <a href="/admin/services" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+              Services
+            </a>{" "}
+            <a href="/admin/users" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
               Staff
             </a>{" "}
-            <a href="/admin/edits" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "#2c6e4b" }}>
+            <a href="/admin/edits" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
               Edits
             </a>{" "}
             {canReviewPasswords && (
-              <a href="/admin/passwords" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "#2c6e4b" }}>
+              <a href="/admin/passwords" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
                 Passwords
               </a>
             )}
           </>
         )}{" "}
         <ThemeToggle />{" "}
-        <button className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "#2c6e4b" }} onClick={() => { setPwOpen((s) => !s); setPwMsg(""); setPwErr(""); }}>
+        <button className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }} onClick={() => { setPwOpen((s) => !s); setPwMsg(""); setPwErr(""); }}>
           Change Password
         </button>{" "}
-        <button className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "#2c6e4b" }} onClick={logout}>
+        <button className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }} onClick={logout}>
           Log out
         </button>
       </div>

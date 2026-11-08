@@ -2,7 +2,7 @@
 //   Register | Area Summary | Grand Totals
 // Mirrors the current filter view (area / status / search).
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, councilId, getFullUser } from "@/lib/db";
+import { prisma, tenantId, getFullUser } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import * as XLSX from "xlsx";
 import { licenseStatus } from "@/lib/license";
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   const q = (sp.get("q") || "").trim();
   const status = (sp.get("status") || "").trim();
 
-  const where: Record<string, unknown> = { recordStatus: "ACTIVE", councilId: councilId() };
+  const where: Record<string, unknown> = { recordStatus: "ACTIVE", tenantId: tenantId() };
   if (area) where.electoralArea = area;
   if (viewerScope.length) {
     if (area) where.electoralArea = viewerScope.includes(area) ? area : { in: [] };
@@ -161,7 +161,7 @@ export async function GET(req: NextRequest) {
 
   const stamp = new Date().toISOString().slice(0, 10);
   const areaPart = area ? area.replace(/[^a-zA-Z0-9]/g, "-") : "All-Areas";
-  const filename = `Adweso-Register-${areaPart}-${stamp}.xlsx`;
+  const filename = `CivicData-Register-${areaPart}-${stamp}.xlsx`;
 
   return new NextResponse(buf, {
     headers: {

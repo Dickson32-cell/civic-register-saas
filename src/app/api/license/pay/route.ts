@@ -10,7 +10,7 @@ import {
 import { prisma } from "@/lib/db";
 import { licenseStatus } from "@/lib/license";
 
-const COUNCIL_ID = process.env.COUNCIL_ID || "adweso";
+const TENANT_ID = process.env.TENANT_ID || "adweso";
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
@@ -25,19 +25,19 @@ export async function GET(req: NextRequest) {
     });
     const data = await res.json();
     const d = data?.data;
-    const row = await getLicenseRow(COUNCIL_ID);
+    const row = await getLicenseRow(TENANT_ID);
     const alreadyUnlocked = row?.licenseKey?.startsWith(`PS|${reference}|`);
-    if (data?.status && d?.status === "success" && d?.metadata?.council === COUNCIL_ID && d.metadata?.purpose === "license_unlock") {
+    if (data?.status && d?.status === "success" && d?.metadata?.council === TENANT_ID && d.metadata?.purpose === "license_unlock") {
       // Webhook is the primary unlocker; verify is a same-session fallback so
       // the council sees success immediately even if the webhook lags seconds.
       if (!alreadyUnlocked && row && d.amount >= CHARGE_GHS * 100 && d.reference === row.pendingRef) {
         const crypto = await import("crypto");
         const mac = crypto
           .createHmac("sha256", process.env.LICENSE_SECRET || "")
-          .update(`${COUNCIL_ID}|${d.reference}|${d.amount}`)
+          .update(`${TENANT_ID}|${d.reference}|${d.amount}`)
           .digest("hex").slice(0, 16).toUpperCase();
         await prisma.licenseState.update({
-          where: { id: COUNCIL_ID },
+          where: { id: TENANT_ID },
           data: {
             paidThrough: row.paidThrough + 100,
             licenseKey: `PS|${d.reference}|${mac}`,
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
         });
         await prisma.auditLog.create({
           data: {
-            councilId: COUNCIL_ID, userId: null,
+            tenantId: TENANT_ID, userId: null,
             action: "LICENSE_PAYSTACK_PAID", entityType: "license_state", entityId: null,
             details: { via: "callback-verify", reference: d.reference, amountPesewas: d.amount, channel: d.channel },
           },
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Register is not locked — no payment due." }, { status: 400 });
   }
   try {
-    const { authorizationUrl, reference: ref } = await initLicensePayment(COUNCIL_ID);
+    const { authorizationUrl, reference: ref } = await initLicensePayment(TENANT_ID);
     return NextResponse.json({ authorizationUrl, reference: ref, feeUSD: LICENSE_FEE_USD, feeGHS: CHARGE_GHS, rate: USD_GHS_RATE });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Payment initialization failed" }, { status: 502 });

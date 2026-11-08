@@ -5,10 +5,10 @@ export const viewport: Viewport = { themeColor: "#0a3b2a" };
 
 export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Adweso" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "CivicData" },
   other: { google: "notranslate" },
-  title: "Adweso Zonal Council — Temporal Structures Register",
-  description: "Fee register for temporal structures, Adweso Zonal Council",
+  title: "CivicData — Register",
+  description: "Data collection your institution can trust — CivicData",
   icons: {
     icon: [
       { url: "/favicon.ico" },

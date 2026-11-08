@@ -1,6 +1,6 @@
 // GET /api/records/[id] — single record with full money detail + ledger history
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, councilId, payerTotals } from "@/lib/db";
+import { prisma, tenantId, payerTotals } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 export async function GET(
@@ -12,7 +12,7 @@ export async function GET(
 
   const { id } = await params;
   const payer = await prisma.feePayer.findFirst({
-    where: { id, councilId: councilId() },
+    where: { id, tenantId: tenantId() },
     include: {
       fees: { orderBy: { createdAt: "asc" } },
       payments: {

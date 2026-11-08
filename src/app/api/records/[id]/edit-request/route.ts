@@ -2,7 +2,7 @@
 // Nothing changes on the record yet; the request waits for admin approval.
 // Admin edits applied directly via PATCH /api/records/[id] still work.
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, councilId, audit, getFullUser } from "@/lib/db";
+import { prisma, tenantId, audit, getFullUser } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 const EDITABLE = ["name", "businessName", "telephone", "streetName", "electoralArea", "businessType", "containerSize", "containerCategory", "bopFee", "fee"] as const;
@@ -21,7 +21,7 @@ export async function POST(
     const me = await getFullUser(session);
     if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const payer = await prisma.feePayer.findFirst({ where: { id, councilId: councilId() } });
+    const payer = await prisma.feePayer.findFirst({ where: { id, tenantId: tenantId() } });
     if (!payer || payer.recordStatus !== "ACTIVE")
       return NextResponse.json({ error: "Record not found" }, { status: 404 });
 
@@ -91,7 +91,7 @@ export async function POST(
     const pending = await prisma.$transaction(async (tx) => {
       const created = await tx.pendingEdit.create({
         data: {
-          councilId: councilId(),
+          tenantId: tenantId(),
           feePayerId: id,
           before: before as object,
           after: after as object,
@@ -101,7 +101,7 @@ export async function POST(
       });
       await tx.auditLog.create({
         data: {
-          councilId: councilId(),
+          tenantId: tenantId(),
         
           userId: session.sub,
           action: "EDIT_REQUESTED",

@@ -3,11 +3,11 @@
 //   THANK_YOU   — registration thank-you (once per record, ever)
 //   BILL_NOTICE — bill printed & distribution notice (once per record, ever)
 // The once-per-record rule is ENFORCED by a unique DB index
-// (council_id, record_id, type); a FAILED send may be retried.
+// (tenant_id, record_id, type); a FAILED send may be retried.
 // Provider: Arkesel (Ghana). Sender ID: env ARKESEL_SENDER (max 11 chars).
 // Secrets live ONLY in env: BULK_SMS_ENABLED, ARKESEL_API_KEY, ARKESEL_SENDER.
 import crypto from "crypto";
-import { prisma, councilId } from "./db";
+import { prisma, tenantId } from "./db";
 
 export const SMS_SENDER_ID = String(process.env.ARKESEL_SENDER || "ADWESOZC").slice(0, 11);
 
@@ -42,12 +42,12 @@ export function fillTemplate(tpl: string, name: string, serial: string): string 
 
 export async function smsDue(council: string, type: SmsType) {
   const sent = await prisma.smsSend.findMany({
-    where: { councilId: council, type, status: "SENT" },
+    where: { tenantId: council, type, status: "SENT" },
     select: { recordId: true },
   });
   const sentIds = new Set(sent.map((s) => s.recordId));
   const rows = await prisma.feePayer.findMany({
-    where: { councilId: council, recordStatus: "ACTIVE" },
+    where: { tenantId: council, recordStatus: "ACTIVE" },
     select: { id: true, name: true, serialNumber: true, telephone: true, electoralArea: true },
     orderBy: [{ electoralArea: "asc" }, { serialNumber: "asc" }],
   });
@@ -63,9 +63,9 @@ export async function smsDue(council: string, type: SmsType) {
 
 export async function markSms(council: string, recordId: string, type: SmsType, phone: string, status: "SENT" | "FAILED") {
   await prisma.smsSend.upsert({
-    where: { councilId_recordId_type: { councilId: council, recordId, type } },
+    where: { tenantId_recordId_type: { tenantId: council, recordId, type } },
     update: { status, phone, sentAt: new Date() },
-    create: { id: crypto.randomBytes(11).toString("hex"), councilId: council, recordId, type, phone, status },
+    create: { id: crypto.randomBytes(11).toString("hex"), tenantId: council, recordId, type, phone, status },
   });
 }
 

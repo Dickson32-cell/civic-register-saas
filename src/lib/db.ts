@@ -46,9 +46,9 @@ export function areaCode(area: string): string | null {
 // app filters by this id; the database (RLS, applied at migration) also
 // enforces it physically. One shared Neon DB, 8 councils, zero mixing.
 // ---------------------------------------------------------------------------
-export function councilId(): string {
-  const id = process.env.COUNCIL_ID;
-  if (!id) throw new Error("COUNCIL_ID not configured on server");
+export function tenantId(): string {
+  const id = process.env.TENANT_ID;
+  if (!id) throw new Error("TENANT_ID not configured on server");
   return id;
 }
 
@@ -70,7 +70,7 @@ export async function generateSerial(area: string): Promise<string> {
   // so concurrent creators can never receive the same number.
   const next = await prisma.$transaction(async (tx) => {
     const updated = await tx.serialCounter.update({
-      where: { councilId_electoralArea: { councilId: councilId(), electoralArea: area } },
+      where: { tenantId_electoralArea: { tenantId: tenantId(), electoralArea: area } },
       data: { lastNumber: { increment: 1 } },
     });
     return updated.lastNumber;
@@ -84,11 +84,11 @@ export async function generateSerial(area: string): Promise<string> {
 export async function payerTotals(feePayerId: string) {
   const [feeAgg, payAgg, bopRow] = await Promise.all([
     prisma.fee.aggregate({
-      where: { feePayerId, councilId: councilId() },
+      where: { feePayerId, tenantId: tenantId() },
       _sum: { amount: true },
     }),
     prisma.payment.aggregate({
-      where: { feePayerId, councilId: councilId() },
+      where: { feePayerId, tenantId: tenantId() },
       _sum: { amount: true },
     }),
     // BOP fee is billable once entered — include it in all totals
@@ -117,7 +117,7 @@ export async function audit(
 ) {
   await prisma.auditLog.create({
     data: {
-      councilId: councilId(),
+      tenantId: tenantId(),
       userId,
       action,
       entityType,

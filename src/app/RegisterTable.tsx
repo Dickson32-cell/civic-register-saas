@@ -474,8 +474,8 @@ export default function RegisterTable({
   return (
     <>
       <div className="card">
-        <h2>Temporal Structures Register</h2>
-        <p className="sub">Official fee register — Adweso Zonal Council, New Juaben South Municipal Assembly</p>
+        <h2>Register</h2>
+        <p className="sub">Official register — Demo Council · powered by CivicData</p>
           {pendingCount > 0 && (
             <div style={{ margin: "8px 0" }}>
               <button className="btn btn-ghost btn-sm" onClick={() => { listPending().then((x) => { setPendingItems(x); setPendingListOpen(true); }); }}>

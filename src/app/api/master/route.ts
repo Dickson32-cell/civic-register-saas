@@ -12,7 +12,7 @@ const ALL_COUNCILS = ["adweso", "newtown", "ogua", "nkukwao", "betom", "srodae",
 
 // MASTER CONSOLE GATE — three conditions, ALL required:
 //   1. logged in as username 'admin'
-//   2. this deployment is the MASTER deployment (env MASTER_COUNCIL === COUNCIL_ID;
+//   2. this deployment is the MASTER deployment (env MASTER_COUNCIL === TENANT_ID;
 //      only the owner's own deployment sets MASTER_COUNCIL)
 //   3. valid session
 // Council deployments (Srodae etc.) have no MASTER_COUNCIL set -> 404,
@@ -23,7 +23,7 @@ async function requirePrimaryAdmin() {
   if (session.username !== "admin")
     return { err: NextResponse.json({ error: "Not found" }, { status: 404 }) };
   const masterCouncil = process.env.MASTER_COUNCIL;
-  const thisCouncil = process.env.COUNCIL_ID;
+  const thisCouncil = process.env.TENANT_ID;
   if (!masterCouncil || masterCouncil !== thisCouncil)
     return { err: NextResponse.json({ error: "Not found" }, { status: 404 }) };
   return { session };
@@ -36,13 +36,13 @@ export async function GET() {
   const [states, counts] = await Promise.all([
     masterPrisma.licenseState.findMany(),
     masterPrisma.feePayer.groupBy({
-      by: ["councilId"],
+      by: ["tenantId"],
       where: { recordStatus: "ACTIVE" },
       _count: { _all: true },
     }),
   ]);
   const stateMap = new Map(states.map((s) => [s.id, s]));
-  const countMap = new Map(counts.map((c) => [c.councilId, c._count._all]));
+  const countMap = new Map(counts.map((c) => [c.tenantId, c._count._all]));
 
   const councils = ALL_COUNCILS.map((id) => {
     const st = stateMap.get(id);
@@ -50,7 +50,7 @@ export async function GET() {
     const registered = countMap.get(id) ?? 0;
     const locked = registered >= paidThrough + FREE_LIMIT;
     return {
-      councilId: id,
+      tenantId: id,
       registered,
       paidThrough,
       remainingFree: Math.max(0, paidThrough + FREE_LIMIT - registered),
@@ -73,16 +73,16 @@ export async function POST(req: NextRequest) {
     // unlock the NEXT tier for that council - it is impossible to generate
     // a key for a tier that is already unlocked, and once applied the same
     // key can never verify again (its tier has moved past).
-    const councilId = String(body.councilId || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (!councilId || !ALL_COUNCILS.includes(councilId))
+    const tenantId = String(body.tenantId || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (!tenantId || !ALL_COUNCILS.includes(tenantId))
       return NextResponse.json({ error: "Unknown council" }, { status: 400 });
-    const state = await masterPrisma.licenseState.findUnique({ where: { id: councilId } });
+    const state = await masterPrisma.licenseState.findUnique({ where: { id: tenantId } });
     const current = state?.paidThrough ?? 0;
     const target = current + FREE_LIMIT;
-    const key = deriveKey(councilId, target);
+    const key = deriveKey(tenantId, target);
     return NextResponse.json({
       ok: true,
-      councilId,
+      tenantId,
       currentPaidThrough: current,
       keyTIER: target,          // the tier this key unlocks (registrations current+1 .. target)
       unlocksUpTo: target,      // registrations allowed after applying = target + ... displayed as target

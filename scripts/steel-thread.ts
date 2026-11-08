@@ -28,7 +28,7 @@ function check(label: string, cond: boolean, extra?: unknown) {
 async function allocateSerial(area: string) {
   return prisma.$transaction(async (tx) => {
     const updated = await tx.serialCounter.update({
-      where: { councilId_electoralArea: { councilId: process.env.COUNCIL_ID || 'adweso', electoralArea: area } },
+      where: { tenantId_electoralArea: { tenantId: process.env.TENANT_ID || 'civicdemo', electoralArea: area } },
       data: { lastNumber: { increment: 1 } },
     });
     return `${AREAS[area]}/ ${pad(updated.lastNumber)}`;
@@ -63,6 +63,7 @@ async function main() {
   console.log("T2: create fee payer + opening fee — money math");
   const rec = await prisma.feePayer.create({
     data: {
+      tenantId: process.env.TENANT_ID || 'civicdemo',
       serialNumber: `TEST-${Date.now()}`,
       electoralArea: t1Area,
       name: "Test Payer",
@@ -74,7 +75,7 @@ async function main() {
     },
   });
   await prisma.fee.create({
-    data: { feePayerId: rec.id, amount: "50.00", description: "Opening fee (test)" },
+    data: { tenantId: process.env.TENANT_ID || 'civicdemo', feePayerId: rec.id, amount: "50.00", description: "Opening fee (test)" },
   });
   let t = await totalsFor(rec.id);
   check(`Total billed = 50.00`, t.billed === 50);
@@ -82,7 +83,7 @@ async function main() {
 
   console.log("T3: partial payment — balance recomputes");
   await prisma.payment.create({
-    data: { feePayerId: rec.id, amount: "20.00", method: "CASH" },
+    data: { tenantId: process.env.TENANT_ID || 'civicdemo', feePayerId: rec.id, amount: "20.00", method: "CASH" },
   });
   t = await totalsFor(rec.id);
   check(`Balance = 30.00 after GH\u20B520`, t.balance === 30, t);
@@ -92,7 +93,7 @@ async function main() {
   const outstanding = t.balance;
   if (outstanding > 0) {
     await prisma.payment.create({
-      data: { feePayerId: rec.id, amount: outstanding.toFixed(2), method: "CASH" },
+      data: { tenantId: process.env.TENANT_ID || 'civicdemo', feePayerId: rec.id, amount: outstanding.toFixed(2), method: "CASH" },
     });
   }
   await prisma.feePayer.update({ where: { id: rec.id }, data: { status: "PAID" } });

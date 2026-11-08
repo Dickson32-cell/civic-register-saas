@@ -2,7 +2,7 @@
 // Creates an INACTIVE account; admin must approve before login works.
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma, councilId, audit } from "@/lib/db";
+import { prisma, tenantId, audit } from "@/lib/db";
 import { loginRateCheck } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       );
 
     const existing = await prisma.appUser.findUnique({
-      where: { councilId_username: { councilId: councilId(), username } },
+      where: { tenantId_username: { tenantId: tenantId(), username } },
     });
     if (existing)
       return NextResponse.json(
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     const hash = await bcrypt.hash(password, 10);
     const user = await prisma.appUser.create({
       data: {
-        councilId: councilId(),
+        tenantId: tenantId(),
         username,
         passwordHash: hash,
         fullName: fullName.trim(),

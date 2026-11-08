@@ -4,7 +4,7 @@
 // so Balance AND Total both read GH₵ 0.00 (Dickson's confirmed behaviour)
 // while the cash ledger stays truthful.
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, councilId, payerTotals, audit, getFullUser } from "@/lib/db";
+import { prisma, tenantId, payerTotals, audit, getFullUser } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
@@ -37,7 +37,7 @@ export async function PATCH(
   const { id } = await params;
   try {
     const body = await req.json();
-    const payer = await prisma.feePayer.findFirst({ where: { id, councilId: councilId() } });
+    const payer = await prisma.feePayer.findFirst({ where: { id, tenantId: tenantId() } });
     if (!payer || payer.recordStatus !== "ACTIVE")
       return NextResponse.json({ error: "Record not found" }, { status: 404 });
     // STAFF RULE: only payment settlement travels PATCH; every field edit
@@ -68,6 +68,7 @@ export async function PATCH(
         if (outstanding > 0) {
           await tx.payment.create({
             data: {
+              tenantId: await tenantId(),
               feePayerId: id,
               amount: outstanding.toFixed(2),
               method: "CASH",
@@ -79,7 +80,7 @@ export async function PATCH(
         await tx.feePayer.update({ where: { id }, data: { status: "PAID" } });
         await tx.auditLog.create({
         data: {
-          councilId: councilId(),
+          tenantId: tenantId(),
         
             userId: session.sub,
             action: "MARK_PAID",
@@ -99,7 +100,7 @@ export async function PATCH(
         await tx.feePayer.update({ where: { id }, data: { status: "UNPAID" } });
         await tx.auditLog.create({
         data: {
-          councilId: councilId(),
+          tenantId: tenantId(),
         
             userId: session.sub,
             action: "MARK_UNPAID",
@@ -187,18 +188,18 @@ export async function PATCH(
       const r = await tx.feePayer.update({ where: { id }, data });
       // A fee edit rides the ledger: keep the fee row equal to the header fee
       if (data.fee != null) {
-        const frows = await tx.fee.findMany({ where: { feePayerId: id, councilId: councilId() } });
+        const frows = await tx.fee.findMany({ where: { feePayerId: id, tenantId: tenantId() } });
         const fsum = frows.reduce((s, f) => s + Number(f.amount), 0);
         if (Math.abs(fsum - Number(data.fee)) > 0.005) {
           if (frows.length === 1)
             await tx.fee.update({ where: { id: frows[0].id }, data: { amount: data.fee } });
           else if (frows.length === 0)
-            await tx.fee.create({ data: { councilId: councilId(), feePayerId: id, amount: data.fee, description: "Opening fee (temporal structure)", createdBy: session.sub } });
+            await tx.fee.create({ data: { tenantId: tenantId(), feePayerId: id, amount: data.fee, description: "Opening fee (temporal structure)", createdBy: session.sub } });
         }
       }
       await tx.auditLog.create({
         data: {
-          councilId: councilId(),
+          tenantId: tenantId(),
         
           userId: session.sub,
           action: "UPDATE_RECORD",

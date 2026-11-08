@@ -1,4 +1,4 @@
-// Council display names, keyed by COUNCIL_ID (matches the RLS role suffix).
+// Council display names, keyed by TENANT_ID (matches the RLS role suffix).
 // Used by the printable bill and anywhere a friendly name is needed.
 export const COUNCIL_NAMES: Record<string, string> = {
   adweso: "Adweso Zonal Council",

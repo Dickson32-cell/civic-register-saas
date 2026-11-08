@@ -3,7 +3,7 @@
 // the single-bill page (/bill/[id]) and the batch print page (/bill/print).
 // BOP stays "—" until zonal councils receive the BOP collection mandate.
 export type BillData = {
-  councilId: string;
+  tenantId: string;
   councilName: string;
   customer: {
     id: string; name: string; businessName: string;

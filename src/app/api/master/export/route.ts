@@ -11,7 +11,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { masterPrisma } from "@/lib/master-db";
-import { COUNCIL_NAMES } from "@/lib/councils";
+import { COUNCIL_NAMES } from "@/lib/tenants";
 import * as XLSX from "xlsx";
 
 const GHS = (n: number) => n.toFixed(2);
@@ -23,11 +23,11 @@ export async function GET() {
   if (session.username !== "admin")
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   const masterCouncil = process.env.MASTER_COUNCIL;
-  if (!masterCouncil || masterCouncil !== process.env.COUNCIL_ID)
+  if (!masterCouncil || masterCouncil !== process.env.TENANT_ID)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const payers = await masterPrisma.feePayer.findMany({
-    orderBy: [{ councilId: "asc" }, { electoralArea: "asc" }, { serialNumber: "asc" }],
+    orderBy: [{ tenantId: "asc" }, { electoralArea: "asc" }, { serialNumber: "asc" }],
     include: { payments: { orderBy: { receivedAt: "asc" }, include: { receivedByUser: { select: { username: true } } } } },
   });
 
@@ -40,7 +40,7 @@ export async function GET() {
   const councilSummary: Record<string, unknown>[] = [];
 
   for (const c of ALL_COUNCILS) {
-    const rows = payers.filter((p) => p.councilId === c);
+    const rows = payers.filter((p) => p.tenantId === c);
     if (!rows.length) continue;
     const cname = COUNCIL_NAMES[c] ?? c;
 
