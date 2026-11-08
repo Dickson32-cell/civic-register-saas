@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
-export default function TopBar({ username, role, canReviewPasswords, showMaster }: { username: string; role: string; canReviewPasswords?: boolean; showMaster?: boolean }) {
+export default function TopBar({ username, role, canReviewPasswords, showMaster, logoDataUrl: logoProp }: { username: string; role: string; canReviewPasswords?: boolean; showMaster?: boolean; logoDataUrl?: string | null }) {
   const router = useRouter();
   const [pwOpen, setPwOpen] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -75,7 +75,7 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster 
     <header className="topbar" style={{ position: "relative", paddingBottom: pwOpen ? 290 : undefined }}>
       <div className="brand">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.jpg" alt="CivicData logo" className="brand-logo" />
+        <img src={logoProp || "/logo.jpg"} alt="Institution logo" className="brand-logo" />
         <div>
           <div className="t1">CivicData</div>
           <div className="t2">Data collection platform</div>

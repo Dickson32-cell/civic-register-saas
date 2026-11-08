@@ -1,7 +1,7 @@
 // Home = the register (server component guards the session)
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getFullUser, tenantId } from "@/lib/db";
+import { getFullUser, tenantId, prisma } from "@/lib/db";
 import { permsFor } from "@/lib/perms";
 import RegisterTable from "./RegisterTable";
 import SmsPanel from "./SmsPanel";
@@ -17,10 +17,14 @@ export default async function HomePage() {
   if (!me || !me.active) redirect("/login");
 
   const perms = permsFor(me.role, me.adminLevel);
+  const tenant = (await prisma.tenant.findUnique({
+    where: { id: tenantId() },
+    select: { logoDataUrl: true },
+  })) ?? null;
 
   return (
     <div className="shell">
-      <TopBar username={me.username} role={me.role} canReviewPasswords={perms.canReviewPasswords} showMaster={isMasterDeployment()} />
+      <TopBar username={me.username} role={me.role} canReviewPasswords={perms.canReviewPasswords} showMaster={isMasterDeployment()} logoDataUrl={tenant?.logoDataUrl ?? null} />
       <main className="main">
         {tenantId() === "adweso" && perms.canManageUsers === true && (
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>

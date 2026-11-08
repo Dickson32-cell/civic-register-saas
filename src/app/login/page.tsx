@@ -1,6 +1,6 @@
 "use client";
 // Login page — the only public page; everything else requires a session.
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -10,6 +10,20 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [logo, setLogo] = useState<string | null>(null);
+  const [tenantName, setTenantName] = useState("");
+
+  useEffect(() => {
+    fetch("/api/tenant/branding")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (j) {
+          setLogo(j.logoDataUrl ?? null);
+          if (j.name) setTenantName(j.name);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,7 +52,7 @@ export default function LoginPage() {
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.jpg" alt="CivicData logo" className="logo-lg" />
+        <img src={logo || "/logo.jpg"} alt="Institution logo" className="logo-lg" />
         <h1>CivicData</h1>
         <p>Data collection platform — sign in</p>
 
