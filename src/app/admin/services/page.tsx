@@ -1,7 +1,7 @@
 // Admin page — Services: what's free, what each paid service does, request buttons,
 // and the status of every request this institution has made.
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getSession, sTid } from "@/lib/auth";
 import { getFullUser } from "@/lib/db";
 import { permsFor } from "@/lib/perms";
 import TopBar from "@/app/TopBar";
@@ -18,7 +18,7 @@ export default async function AdminServicesPage() {
     <div className="shell">
       <TopBar username={me.username} role={me.role} canReviewPasswords={permsFor(me.role, me.adminLevel).canReviewPasswords} />
       <main className="main">
-        <ServicesPanel />
+        <ServicesPanel tenantId={sTid(session)} />
       </main>
     </div>
   );

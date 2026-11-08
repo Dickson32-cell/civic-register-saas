@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
-export default function TopBar({ username, role, canReviewPasswords, showMaster, logoDataUrl: logoProp }: { username: string; role: string; canReviewPasswords?: boolean; showMaster?: boolean; logoDataUrl?: string | null }) {
+export default function TopBar({ username, role, canReviewPasswords, logoDataUrl: logoProp }: { username: string; role: string; canReviewPasswords?: boolean; logoDataUrl?: string | null }) {
   const router = useRouter();
   const [pwOpen, setPwOpen] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -55,7 +55,6 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster,
       <a href="/map" className="drawer-item">Map</a>
       {role === "ADMIN" && (
         <>
-          {username === "admin" && showMaster && <a href="/master" className="drawer-item">Master</a>}
           <a href="/admin/approvals" className="drawer-item">
             Approvals{pendingCount ? ` (${pendingCount})` : ""}
           </a>
@@ -105,11 +104,6 @@ export default function TopBar({ username, role, canReviewPasswords, showMaster,
         </a>{" "}
         {role === "ADMIN" && (
           <>
-            {username === "admin" && showMaster && (
-              <a href="/master" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
-                Master
-              </a>
-            )}{" "}
             <a href="/admin/approvals" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
               Approvals{pendingCount ? ` (${pendingCount})` : ""}
             </a>{" "}

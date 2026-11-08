@@ -60,7 +60,7 @@ export default function Landing() {
 
         <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "18px 20px" }}>
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
-            Data collection is free. Full-services unlocks, with the platform administrator&apos;s approval:
+            Data collection is free forever. Extra services open after payment, agreed directly with the platform team:
           </div>
           <div style={{ display: "grid", gap: 10 }}>
             {PAID.map(([t, d]) => (
@@ -74,7 +74,7 @@ export default function Landing() {
             ))}
           </div>
           <div style={{ fontSize: 12, opacity: 0.65, marginTop: 12 }}>
-            Money is never held inside the system — the administrator agrees the price with you directly; approval happens after payment.
+            Money is never held inside the system — you agree the price with the platform team directly and pay by Mobile Money or bank. Every company&apos;s data stays in its own private workspace.
           </div>
         </div>
       </main>

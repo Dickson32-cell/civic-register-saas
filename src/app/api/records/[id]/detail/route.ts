@@ -1,7 +1,7 @@
 // GET /api/records/[id] — single record with full money detail + ledger history
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, payerTotals } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 
 export async function GET(
   req: NextRequest,
@@ -12,7 +12,7 @@ export async function GET(
 
   const { id } = await params;
   const payer = await prisma.feePayer.findFirst({
-    where: { id, tenantId: tenantId() },
+    where: { id, tenantId: sTid(session) },
     include: {
       fees: { orderBy: { createdAt: "asc" } },
       payments: {
@@ -23,7 +23,7 @@ export async function GET(
   });
   if (!payer) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const totals = await payerTotals(id);
+  const totals = await payerTotals(sTid(session), id);
   // Shape the payload for the client detail modal
   const payments = payer.payments.map((p) => ({
     amount: Number(p.amount),

@@ -19,7 +19,7 @@ type Data = {
   requests: Req[];
 };
 
-export default function ServicesPanel() {
+export default function ServicesPanel({ tenantId }: { tenantId: string }) {
   const [data, setData] = useState<Data | null>(null);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -72,7 +72,7 @@ export default function ServicesPanel() {
             for your approval under <a href="/admin/approvals" style={{ color: "var(--blue)", fontWeight: 600 }}>Approvals</a>:
           </div>
           <code style={{ display: "inline-block", marginTop: 6, fontSize: 13, background: "var(--blue-soft)", padding: "6px 10px", borderRadius: 6 }}>
-            {typeof window !== "undefined" ? `${window.location.origin}/register` : "/register"}
+            {typeof window !== "undefined" ? `${window.location.origin}/register?c=${encodeURIComponent(tenantId)}` : `/register?c=${encodeURIComponent(tenantId)}`}
           </code>
         </div>
 

@@ -2,7 +2,7 @@
 // PATCH /api/admin/users — approve/reject/deactivate/reactivate/makeAdmin/setAdminLevel/delete
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, audit, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { ADMIN_LEVELS, AdminLevel, permsFor } from "@/lib/perms";
 
 export async function GET() {
@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "Administrators only" }, { status: 403 });
 
     const users = await prisma.appUser.findMany({
-    where: { tenantId: tenantId() },
+    where: { tenantId: sTid(session) },
     orderBy: { createdAt: "asc" },
     select: {
       id: true, username: true, fullName: true,
@@ -24,7 +24,7 @@ export async function GET() {
   // Records created per user (from the audit trail)
   const counts = await prisma.auditLog.groupBy({
     by: ["userId"],
-    where: { action: "CREATE_RECORD", tenantId: tenantId(), userId: { not: null } },
+    where: { action: "CREATE_RECORD", tenantId: sTid(session), userId: { not: null } },
     _count: { _all: true },
   });
   const countMap = new Map(counts.map((c) => [c.userId, c._count._all]));
@@ -48,7 +48,7 @@ export async function PATCH(req: NextRequest) {
     if (!userId || !action)
       return NextResponse.json({ error: "userId and action required" }, { status: 400 });
 
-    const target = await prisma.appUser.findFirst({ where: { id: userId, tenantId: tenantId() } });
+    const target = await prisma.appUser.findFirst({ where: { id: userId, tenantId: sTid(session) } });
     if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
     if (target.username === "admin" && action !== "deactivate" && action !== "reactivate")
       return NextResponse.json(
@@ -58,11 +58,11 @@ export async function PATCH(req: NextRequest) {
     // Free-plan staff cap: approving a new staff consumes a seat.
     if (action === "approve") {
       const tenant = await prisma.tenant.findUnique({
-        where: { id: tenantId() },
+        where: { id: sTid(session) },
         select: { staffSeatLimit: true, name: true },
       });
       const activeStaff = await prisma.appUser.count({
-        where: { tenantId: tenantId(), role: "STAFF", active: true, approvedAt: { not: null } },
+        where: { tenantId: sTid(session), role: "STAFF", active: true, approvedAt: { not: null } },
       });
       if (tenant && activeStaff >= tenant.staffSeatLimit)
         return NextResponse.json(
@@ -114,7 +114,7 @@ export async function PATCH(req: NextRequest) {
           await tx.appUser.delete({ where: { id: target.id } });
           await tx.auditLog.create({
             data: {
-              tenantId: tenantId(),
+              tenantId: sTid(session),
               userId: me.id,
               action: "USER_DELETED",
               entityType: "app_user",
@@ -148,7 +148,7 @@ export async function PATCH(req: NextRequest) {
       const u = await tx.appUser.update({ where: { id: userId }, data });
       await tx.auditLog.create({
         data: {
-          tenantId: await tenantId(),
+          tenantId: await sTid(session),
           userId: session.sub,
           action: `USER_${String(action).toUpperCase()}`,
           entityType: "app_user",

@@ -24,10 +24,10 @@ model Tenant {
   colour      String   @default("#0a3b2a") @db.VarChar(16)
   logoUrl     String?  @map("logo_url") @db.VarChar(300)
   areas       Json     @default("[]") // [{ area: "Ada", code: "ADA" }]
-  ownerEmail  String   @map("owner_email") @db.VarChar(120)
-  ownerName   String   @map("owner_name") @db.VarChar(120)
+  ownerEmail  String?  @map("owner_email") @db.VarChar(120)
+  ownerName   String?  @map("owner_name") @db.VarChar(120)
   status      String   @default("TRIAL") @db.VarChar(12) // TRIAL | ACTIVE | SUSPENDED
-  trialEndsAt DateTime @map("trial_ends_at") @db.Timestamptz(3)
+  trialEndsAt DateTime? @map("trial_ends_at") @db.Timestamptz(3)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -205,7 +205,9 @@ model AppUser {
   paymentsReceived Payment[] @relation("PaymentReceivedBy")
   feePayersCreated FeePayer[] @relation("FeePayerCreator")
 
-  @@unique([tenantId, username])
+  // Usernames are globally unique across ALL companies — login needs no company picker
+  @@unique([username])
+  @@index([tenantId])
   @@map("app_user")
 }
 

@@ -1,8 +1,8 @@
 // GET  /api/tenant/services — this tenant's service requests + entitlements (institution admin)
 // POST /api/tenant/services — request a paid service: STAFF_SEATS or BRANDING
 import { NextRequest, NextResponse } from "next/server";
-import { prisma, tenantId, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { prisma, getFullUser } from "@/lib/db";
+import { sTid, getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
 const KINDS = ["STAFF_SEATS", "BRANDING"] as const;
@@ -16,22 +16,23 @@ export async function GET() {
     return NextResponse.json({ error: "Not permitted" }, { status: 403 });
 
   const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId() },
+    where: { id: sTid(session) },
     select: {
       id: true, name: true,
       staffSeatLimit: true, brandingUnlocked: true, logoDataUrl: true,
     },
   });
   const activeStaff = await prisma.appUser.count({
-    where: { tenantId: tenantId(), role: "STAFF", active: true, approvedAt: { not: null } },
+    where: { tenantId: sTid(session), role: "STAFF", active: true, approvedAt: { not: null } },
   });
   const requests = await prisma.serviceRequest.findMany({
-    where: { tenantId: tenantId() },
+    where: { tenantId: sTid(session) },
     orderBy: { createdAt: "desc" },
     take: 30,
   });
 
   return NextResponse.json({
+    tenantId: sTid(session),
     plan: {
       freeStaffSeats: tenant?.staffSeatLimit ?? 2,
       activeStaff,
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     // one open request per service keeps the queue honest (no stacked duplicates)
     const open = await prisma.serviceRequest.findFirst({
-      where: { tenantId: tenantId(), kind, status: "PENDING" },
+      where: { tenantId: sTid(session), kind, status: "PENDING" },
     });
     if (open)
       return NextResponse.json(
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     const r = await prisma.serviceRequest.create({
       data: {
-        tenantId: tenantId(),
+        tenantId: sTid(session),
         kind,
         seats: kind === "STAFF_SEATS" ? Number(seats) : null,
         note: cleanNote,

@@ -2,7 +2,7 @@
 // area filters, search, per-area summaries AND GRAND TOTALS.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 
 import { BASIC_RATE_2027 } from "@/lib/frrRates";
 export async function GET(req: NextRequest) {
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       viewerScope = _me.viewerAreas.filter((a) => typeof a === "string" && a.length > 0);
   }
 
-  const where: Record<string, unknown> = { recordStatus: "ACTIVE", tenantId: tenantId() };
+  const where: Record<string, unknown> = { recordStatus: "ACTIVE", tenantId: sTid(session) };
   if (area) where.electoralArea = area;
   if (viewerScope.length) {
     if (area) where.electoralArea = viewerScope.includes(area) ? area : { in: [] };

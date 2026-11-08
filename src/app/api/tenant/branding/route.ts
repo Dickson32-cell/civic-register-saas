@@ -3,14 +3,19 @@
 // POST /api/tenant/branding — set logo (PAID service) or name/colour (free), admin only
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
 const MAX_LOGO_BYTES = 300_000; // ~300KB decoded cap
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // mine=1 → the signed-in company's own logo and name (workspace surface);
+  // otherwise the deployment's default branding (sign-in screen, pre-login).
+  const mine = req.nextUrl.searchParams.get("mine") === "1";
+  const session = mine ? await getSession() : null;
+  const tid = session ? sTid(session) : tenantId();
   const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId() },
+    where: { id: tid },
     select: { name: true, logoDataUrl: true, colour: true },
   });
   if (!tenant) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -32,7 +37,7 @@ export async function POST(req: NextRequest) {
   try {
     const { logoDataUrl, colour, name, billHeading, billFooter, billTitle, billLegal1, billLegal2, billStamp: billStampCaption } = await req.json();
     const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId() },
+      where: { id: sTid(session) },
       select: { brandingUnlocked: true, logoDataUrl: true },
     });
 
@@ -107,7 +112,7 @@ export async function POST(req: NextRequest) {
     if (Object.keys(data).length === 0)
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
 
-    await prisma.tenant.update({ where: { id: tenantId() }, data });
+    await prisma.tenant.update({ where: { id: sTid(session) }, data });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("branding update error", e);

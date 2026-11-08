@@ -20,18 +20,18 @@ export const LICENSE_FEE_USD = Number(process.env.LICENSE_FEE_USD || 6.99); // p
 // lastPaymentAt, licenseKey (the currently active unlock key).
 // ---------------------------------------------------------------------------
 
-export async function getLicenseState() {
+export async function getLicenseState(tid: string) {
   return prisma.licenseState.upsert({
-    where: { id: tenantId() },
+    where: { id: tid },
     update: {},
-    create: { id: tenantId(), paidThrough: 0 },
+    create: { id: tid, paidThrough: 0 },
   });
 }
 
-export async function countActiveRegistrations() {
+export async function countActiveRegistrations(tid: string) {
   // Soft-deleted records do NOT count toward the license (fair to councils);
   // serial gaps from tests remain but ACTIVE rows are what matters.
-  return prisma.feePayer.count({ where: { tenantId: tenantId(), recordStatus: "ACTIVE" } });
+  return prisma.feePayer.count({ where: { tenantId: tid, recordStatus: "ACTIVE" } });
 }
 
 export type LicenseStatus = {
@@ -45,8 +45,8 @@ export type LicenseStatus = {
   momoNumber: string;   // how to pay (mobile money)
 };
 
-export async function licenseStatus(): Promise<LicenseStatus> {
-  const [state, registered] = await Promise.all([getLicenseState(), countActiveRegistrations()]);
+export async function licenseStatus(tid: string): Promise<LicenseStatus> {
+  const [state, registered] = await Promise.all([getLicenseState(tid), countActiveRegistrations(tid)]);
   const locked = registered >= state.paidThrough + FREE_LIMIT;
   return {
     registered,
@@ -71,10 +71,10 @@ function councilSecret(): string {
   return s;
 }
 
-export function deriveKey(tenantId: string, paidThrough: number): string {
+export function deriveKey(tid: string, paidThrough: number): string {
   const mac = crypto
     .createHmac("sha256", councilSecret())
-    .update(`${tenantId}:${paidThrough}`)
+    .update(`${tid}:${paidThrough}`)
     .digest("hex")
     .slice(0, 16)
     .toUpperCase();
@@ -82,9 +82,9 @@ export function deriveKey(tenantId: string, paidThrough: number): string {
   return mac.replace(/(.{4})(.{4})(.{4})(.{4})/, "$1-$2-$3-$4");
 }
 
-export function verifyKey(tenantId: string, paidThrough: number, key: string): boolean {
+export function verifyKey(tid: string, paidThrough: number, key: string): boolean {
   const normalized = key.trim().toUpperCase().replace(/\s+/g, "");
-  return deriveKey(tenantId, paidThrough) === normalized;
+  return deriveKey(tid, paidThrough) === normalized;
 }
 
 // ---------------------------------------------------------------------------
@@ -127,29 +127,28 @@ async function auditKeyAttempt(council: string, applied: boolean, detail: object
 
 // Apply a paid unlock: raises paidThrough by FREE_LIMIT (one payment = 100 more
 // registrations) and stores the key that unlocked it.
-export async function applyUnlockKey(councilKey: string, key: string) {
-  // councilKey = this deployment's TENANT_ID (from the license API route)
-  const rl = keyRateCheck(councilKey);
+export async function applyUnlockKey(tid: string, key: string) {
+  const rl = keyRateCheck(tid);
   if (!rl.ok) {
     return { ok: false as const, error: `Too many key attempts. Try again in ${rl.retryInMin} minutes.` };
   }
-  const state = await getLicenseState();
+  const state = await getLicenseState(tid);
   const target = state.paidThrough + FREE_LIMIT;
-  if (!verifyKey(councilKey, target, key)) {
-    await auditKeyAttempt(councilKey, false, { attemptedTarget: target, reason: "invalid-or-reused-key" });
+  if (!verifyKey(tid, target, key)) {
+    await auditKeyAttempt(tid, false, { attemptedTarget: target, reason: "invalid-or-reused-key" });
     return { ok: false as const, error: "Invalid key. Check with the system provider after payment." };
   }
   const updated = await prisma.licenseState.update({
-    where: { id: councilKey },
+    where: { id: tid },
     data: { paidThrough: target, licenseKey: key.trim().toUpperCase(), lastPaymentAt: new Date() },
   });
-  await auditKeyAttempt(councilKey, true, { unlockedThrough: target });
+  await auditKeyAttempt(tid, true, { unlockedThrough: target });
   return { ok: true as const, paidThrough: updated.paidThrough };
 }
 
 // Called before creating a record. Returns null if allowed; returns the
 // license status if the register is locked (route returns 402 + status).
-export async function assertCanCreate(): Promise<LicenseStatus | null> {
-  const status = await licenseStatus();
+export async function assertCanCreate(tid: string): Promise<LicenseStatus | null> {
+  const status = await licenseStatus(tid);
   return status.locked ? status : null;
 }

@@ -2,7 +2,7 @@
 // PATCH /api/admin/passwords — approve (applies the stored hash) or reject
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, audit, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
 export async function GET() {
@@ -14,7 +14,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not permitted" }, { status: 403 });
 
   const requests = await prisma.passwordChangeRequest.findMany({
-    where: { tenantId: tenantId() },
+    where: { tenantId: sTid(session) },
     orderBy: { requestedAt: "desc" },
     include: { user: { select: { username: true, fullName: true, active: true } } },
   });
@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "requestId and decision required" }, { status: 400 });
 
     const reqRow = await prisma.passwordChangeRequest.findFirst({
-      where: { id: requestId, tenantId: tenantId() },
+      where: { id: requestId, tenantId: sTid(session) },
     });
     if (!reqRow) return NextResponse.json({ error: "Request not found" }, { status: 404 });
     if (reqRow.status !== "PENDING")
@@ -68,7 +68,7 @@ export async function PATCH(req: NextRequest) {
       });
       await tx.auditLog.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
         
           userId: me.id,
           action: `PASSWORD_${decision === "approve" ? "APPROVED" : "REJECTED"}`,

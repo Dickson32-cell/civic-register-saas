@@ -2,11 +2,18 @@
 // Creates an INACTIVE account; admin must approve before login works.
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma, tenantId, audit } from "@/lib/db";
+import { prisma, audit } from "@/lib/db";
 import { loginRateCheck } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
+    const cUrl = new URL(req.url);
+    const tenantCode = String(cUrl.searchParams.get("c") || "");
+    if (!/^[a-z0-9-]{4,40}$/.test(tenantCode))
+      return NextResponse.json({ errors: ["Open the registration link your organisation shared with you"] }, { status: 400 });
+    const theTenant = await prisma.tenant.findUnique({ where: { id: tenantCode }, select: { id: true } });
+    if (!theTenant)
+      return NextResponse.json({ errors: ["That registration link is not valid for any registered organisation"] }, { status: 400 });
     const body = await req.json();
     const { username, password, fullName } = body;
 
@@ -28,7 +35,7 @@ export async function POST(req: NextRequest) {
       );
 
     const existing = await prisma.appUser.findUnique({
-      where: { tenantId_username: { tenantId: tenantId(), username } },
+      where: { username },
     });
     if (existing)
       return NextResponse.json(
@@ -39,7 +46,7 @@ export async function POST(req: NextRequest) {
     const hash = await bcrypt.hash(password, 10);
     const user = await prisma.appUser.create({
       data: {
-        tenantId: tenantId(),
+        tenantId: theTenant.id,
         username,
         passwordHash: hash,
         fullName: fullName.trim(),

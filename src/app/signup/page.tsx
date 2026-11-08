@@ -9,6 +9,9 @@ export default function SignupPage() {
   const [contact, setContact] = useState("");
   const [phone, setPhone] = useState("");
   const [areas, setAreas] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -65,21 +68,27 @@ export default function SignupPage() {
     img.src = url;
   }
 
+  // Workspace signup — account is created instantly with the company's own
+  // password; the response signs the administrator in right away.
+  function showErrors(j: { errors?: string[]; error?: string }) {
+    setErr(j.errors ? j.errors.join(" · ") : (j.error || "Could not create the workspace — try again."));
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(""); setMsg(""); setBusy(true);
     try {
-      const res = await fetch("/api/signup-request", {
+      const res = await fetch("/api/workspace/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ org, contact, phone, areas, colour, logoDataUrl: logo }),
+        body: JSON.stringify({ org, contact, phone, areas, colour, logoDataUrl: logo, username, password, password2 }),
       });
       const j = await res.json().catch(() => ({}));
-      if (!res.ok) setErr(j.error || "Could not send — try again.");
-      else {
-        setDone(true);
-        setMsg(j.message || "Request received.");
-      }
+      if (!res.ok) { showErrors(j); return; }
+      // Signed in already (cookie set by the response) — straight to the workspace
+      setDone(true);
+      setMsg(j.message || "Workspace ready.");
+      setTimeout(() => { window.location.href = "/"; }, 900);
     } finally {
       setBusy(false);
     }
@@ -93,9 +102,9 @@ export default function SignupPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.jpg" alt="CivicData" style={{ width: 46, height: 46, borderRadius: 10 }} />
           <div>
-            <h1 style={{ margin: 0 }}>Start collecting — free</h1>
+            <h1 style={{ margin: 0 }}>Create your workspace</h1>
             <p className="su-sub">
-              Set up takes minutes. The platform administrator confirms your workspace and sends your admin login to your phone.
+              Your company gets its own private workspace now — you choose the username and password. Nobody else sees your data, ever.
             </p>
           </div>
         </div>
@@ -103,9 +112,8 @@ export default function SignupPage() {
         {done ? (
           <>
             <div className="su-banner-blue">
-              {msg} We will reach you on the phone you gave.
+              {msg} Taking you to your workspace…
             </div>
-            <a href="/" style={{ color: "#1c3f6e", fontSize: 14, fontWeight: 600 }}>Back to welcome page</a>
           </>
         ) : (
           <>
@@ -118,12 +126,27 @@ export default function SignupPage() {
               <input className="su-in" value={contact} onChange={(e) => setContact(e.target.value)} required minLength={3} maxLength={120} placeholder="Who we will contact" />
             </label>
             <label className="su-fld">
-              <span className="su-cap">Phone number (your login details go here)</span>
+              <span className="su-cap">Phone number</span>
               <input className="su-in" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="e.g. 024 000 0000" />
             </label>
             <label className="su-fld">
               <span className="su-cap">Areas / branches you record (optional)</span>
               <input className="su-in" value={areas} onChange={(e) => setAreas(e.target.value)} placeholder="e.g. Central, Riverside, East" />
+            </label>
+
+            <div style={{ borderTop: "1px solid #e3e9f0", margin: "16px 0 14px" }} />
+            <div className="su-cap" style={{ fontSize: 14, fontWeight: 800, color: "#1c3f6e", marginBottom: 10 }}>Your secure sign-in</div>
+            <label className="su-fld">
+              <span className="su-cap">Choose a username</span>
+              <input className="su-in" value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} maxLength={30} autoComplete="username" placeholder="Used every time you sign in" />
+            </label>
+            <label className="su-fld">
+              <span className="su-cap">Create a password (8+ characters)</span>
+              <input className="su-in" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" placeholder="Only you should know it" />
+            </label>
+            <label className="su-fld">
+              <span className="su-cap">Repeat the password</span>
+              <input className="su-in" type="password" value={password2} onChange={(e) => setPassword2(e.target.value)} required minLength={8} autoComplete="new-password" placeholder="Same password again" />
             </label>
 
             <div className="su-cap" style={{ margin: "2px 0 8px", fontSize: 12.5, fontWeight: 700 }}>Make it yours</div>
@@ -145,10 +168,10 @@ export default function SignupPage() {
 
             {err && <div className="su-banner-red">{err}</div>}
             <button type="submit" className="su-btn" disabled={busy}>
-              {busy ? "Sending your request…" : "Send my request"}
+              {busy ? "Creating your workspace…" : "Create my workspace"}
             </button>
             <div className="su-note">
-              Data collection is free forever. We never hold anybody&apos;s money — pricing for extra services is agreed with you directly.
+              Data collection is free forever, your account opens immediately, and no other company can ever see your records.
             </div>
           </>
         )}

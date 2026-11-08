@@ -7,7 +7,7 @@
 // Gates: council must be 'adweso' (404 otherwise); sender must be a FULL admin
 // (403 otherwise); the module must be configured via env (400 'not configured').
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { getFullUser, tenantId, prisma } from "@/lib/db";
 import { permsFor } from "@/lib/perms";
 import {
@@ -21,12 +21,12 @@ const MAX_PER_PRESS = 40; // keep each press well under the serverless timeout; 
 async function guard() {
   const session = await getSession();
   if (!session) return { err: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  if (tenantId() !== SMS_COUNCIL)
+  if (sTid(session) !== SMS_COUNCIL)
     return { err: NextResponse.json({ error: "Not found" }, { status: 404 }) };
   const me = await getFullUser(session);
   if (!me || me.role !== "ADMIN" || permsFor(me.role, me.adminLevel).canManageUsers !== true)
     return { err: NextResponse.json({ error: "Only FULL administrators can use SMS" }, { status: 403 }) };
-  return { me, sub: session.sub };
+  return { me, sub: session.sub, session };
 }
 
 export async function GET() {
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     await markSms(SMS_COUNCIL, rid, type as SmsType, phone, s);
     await prisma.auditLog.create({
       data: {
-        tenantId: tenantId(),
+        tenantId: sTid(g.session),
         userId: g.sub,
         action: "SINGLE_SMS",
         entityType: "fee_payer",
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
 
   await prisma.auditLog.create({
     data: {
-      tenantId: tenantId(),
+      tenantId: sTid(g.session),
       userId: g.sub,
       action: "BULK_SMS",
       entityType: "fee_payer",

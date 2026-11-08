@@ -2,8 +2,8 @@
 // Rate-limited: 5 attempts per username+IP per 15 minutes.
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma, tenantId, createSessionToken, audit } from "@/lib/db";
-import { SESSION_COOKIE } from "@/lib/auth";
+import { prisma, createSessionToken, audit } from "@/lib/db";
+import { sTid, SESSION_COOKIE } from "@/lib/auth";
 import { loginRateCheck, loginRateClear } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await prisma.appUser.findUnique({
-      where: { tenantId_username: { tenantId: tenantId(), username } },
+      where: { username: String(username) },
     });
     if (!user || !user.active) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     loginRateClear(rlKey);
 
-    const token = await createSessionToken(user.id, user.username, user.role);
+    const token = await createSessionToken(user.id, user.username, user.role, user.tenantId);
     await audit(user.id, "LOGIN", "app_user", user.id, { username });
 
     const res = NextResponse.json({

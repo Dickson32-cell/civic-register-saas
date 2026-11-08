@@ -3,7 +3,7 @@
 // role ADMIN only, tenant-scoped, counts for the TopBar badge.
 import { NextResponse } from "next/server";
 import { prisma, tenantId, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
 export async function GET() {
@@ -18,13 +18,13 @@ export async function GET() {
 
   const [staff, edits, passwords] = await Promise.all([
     prisma.appUser.findMany({
-      where: { tenantId: tenantId(), approvedAt: null, role: "STAFF" },
+      where: { tenantId: sTid(session), approvedAt: null, role: "STAFF" },
       orderBy: { createdAt: "desc" },
       select: { id: true, username: true, fullName: true, createdAt: true },
     }),
     perms.canReviewEdits
       ? prisma.pendingEdit.findMany({
-          where: { tenantId: tenantId(), status: "PENDING" },
+          where: { tenantId: sTid(session), status: "PENDING" },
           orderBy: { createdAt: "desc" },
           select: {
             id: true, createdAt: true,
@@ -34,7 +34,7 @@ export async function GET() {
       : Promise.resolve([]),
     perms.canReviewPasswords
       ? prisma.passwordChangeRequest.findMany({
-          where: { tenantId: tenantId(), status: "PENDING" },
+          where: { tenantId: sTid(session), status: "PENDING" },
           orderBy: { requestedAt: "desc" },
           select: {
             id: true, requestedAt: true,

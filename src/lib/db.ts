@@ -61,7 +61,7 @@ export function formatSerial(code: string, n: number): string {
   return `${code}/ ${padded}`;
 }
 
-export async function generateSerial(area: string): Promise<string> {
+export async function generateSerial(tid: string, area: string): Promise<string> {
   const code = areaCode(area);
   if (!code) throw new Error(`Unknown electoral area: ${area}`);
 
@@ -70,7 +70,7 @@ export async function generateSerial(area: string): Promise<string> {
   // so concurrent creators can never receive the same number.
   const next = await prisma.$transaction(async (tx) => {
     const updated = await tx.serialCounter.update({
-      where: { tenantId_electoralArea: { tenantId: tenantId(), electoralArea: area } },
+      where: { tenantId_electoralArea: { tenantId: tid, electoralArea: area } },
       data: { lastNumber: { increment: 1 } },
     });
     return updated.lastNumber;
@@ -81,14 +81,14 @@ export async function generateSerial(area: string): Promise<string> {
 // ---------------------------------------------------------------------------
 // Money computations — DECIMAL only, never float
 // ---------------------------------------------------------------------------
-export async function payerTotals(feePayerId: string) {
+export async function payerTotals(tid: string, feePayerId: string) {
   const [feeAgg, payAgg, bopRow] = await Promise.all([
     prisma.fee.aggregate({
-      where: { feePayerId, tenantId: tenantId() },
+      where: { feePayerId, tenantId: tid },
       _sum: { amount: true },
     }),
     prisma.payment.aggregate({
-      where: { feePayerId, tenantId: tenantId() },
+      where: { feePayerId, tenantId: tid },
       _sum: { amount: true },
     }),
     // BOP fee is billable once entered — include it in all totals
@@ -113,11 +113,17 @@ export async function audit(
   action: string,
   entityType: string,
   entityId: string | null,
-  details: unknown
+  details: unknown,
+  tenantOverride?: string
 ) {
+  let tid = tenantOverride;
+  if (!tid && userId) {
+    const u = await prisma.appUser.findUnique({ where: { id: userId }, select: { tenantId: true } });
+    tid = u?.tenantId;
+  }
   await prisma.auditLog.create({
     data: {
-      tenantId: tenantId(),
+      tenantId: tid ?? tenantId(),
       userId,
       action,
       entityType,
@@ -134,8 +140,8 @@ const secret = new TextEncoder().encode(
   process.env.SESSION_SECRET || "adweso-zonal-council-temporal-structures-2026-session-key"
 );
 
-export async function createSessionToken(userId: string, username: string, role: string) {
-  return new SignJWT({ sub: userId, username, role })
+export async function createSessionToken(userId: string, username: string, role: string, tenantId: string) {
+  return new SignJWT({ sub: userId, username, role, tenantId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("8h")
@@ -145,7 +151,7 @@ export async function createSessionToken(userId: string, username: string, role:
 export async function verifySessionToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, secret);
-    return payload as { sub: string; username: string; role: string };
+    return payload as { sub: string; username: string; role: string; tenantId: string };
   } catch {
     return null;
   }
@@ -155,7 +161,7 @@ export async function verifySessionToken(token: string) {
 export async function getFullUser(session: { sub: string }) {
   const user = await prisma.appUser.findUnique({
     where: { id: session.sub },
-    select: { id: true, username: true, fullName: true, role: true, adminLevel: true, active: true, viewerAreas: true },
+    select: { id: true, username: true, fullName: true, role: true, adminLevel: true, active: true, viewerAreas: true, tenantId: true },
   });
   return user;
 }

@@ -2,7 +2,7 @@
 // PATCH semantics kept simple: this endpoint only ADDS cash received.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, payerTotals, audit, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
 export async function POST(
@@ -26,7 +26,7 @@ export async function POST(
     if (!Number.isFinite(amount) || amount <= 0)
       return NextResponse.json({ errors: ["Amount must be a positive number"] }, { status: 400 });
 
-    const payer = await prisma.feePayer.findFirst({ where: { id, tenantId: tenantId() } });
+    const payer = await prisma.feePayer.findFirst({ where: { id, tenantId: sTid(session) } });
     if (!payer || payer.recordStatus !== "ACTIVE")
       return NextResponse.json({ error: "Record not found" }, { status: 404 });
 
@@ -39,7 +39,7 @@ export async function POST(
         { status: 403 }
       );
 
-    const totals = await payerTotals(id);
+    const totals = await payerTotals(sTid(session), id);
     if (amount > totals.balance + 0.001) {
       return NextResponse.json(
         { errors: [`Payment exceeds outstanding balance (GH\u20B5 ${totals.balance.toFixed(2)})`] },
@@ -50,7 +50,7 @@ export async function POST(
     const payment = await prisma.$transaction(async (tx) => {
       const created = await tx.payment.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
           feePayerId: id,
           amount: amount.toFixed(2),
           method: "CASH",
@@ -65,7 +65,7 @@ export async function POST(
       }
       await tx.auditLog.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
           userId: session.sub,
           action: "RECORD_PAYMENT",
           entityType: "payment",
@@ -76,8 +76,8 @@ export async function POST(
       return created;
     });
 
-    const after = await payerTotals(id);
-    const updated = await prisma.feePayer.findFirst({ where: { id, tenantId: tenantId() } });
+    const after = await payerTotals(sTid(session), id);
+    const updated = await prisma.feePayer.findFirst({ where: { id, tenantId: sTid(session) } });
     return NextResponse.json({
       ok: true,
       payment: { id: payment.id, amount: Number(payment.amount) },

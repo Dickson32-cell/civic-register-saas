@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma, tenantId, audit } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
@@ -33,11 +33,11 @@ export async function POST(req: NextRequest) {
         data: { status: "REJECTED" },
       });
       await tx.passwordChangeRequest.create({
-        data: { tenantId: tenantId(), userId: user.id, newHash: hash, status: "PENDING" },
+        data: { tenantId: sTid(session), userId: user.id, newHash: hash, status: "PENDING" },
       });
       await tx.auditLog.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
         
           userId: user.id,
           action: "PASSWORD_CHANGE_REQUESTED",

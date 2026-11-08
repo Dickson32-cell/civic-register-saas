@@ -1,11 +1,10 @@
 // Home — signed-out visitors get the public landing; signed-in users get the register.
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { getFullUser, tenantId, prisma } from "@/lib/db";
 import { permsFor } from "@/lib/perms";
 import RegisterTable from "./RegisterTable";
 import SmsPanel from "./SmsPanel";
-import { isMasterDeployment } from "@/lib/masterFlag";
 import LicenseGate from "./LicenseGate";
 import TopBar from "./TopBar";
 import Landing from "./Landing";
@@ -22,15 +21,15 @@ export default async function HomePage() {
 
   const perms = permsFor(me.role, me.adminLevel);
   const tenant = (await prisma.tenant.findUnique({
-    where: { id: tenantId() },
+    where: { id: sTid(session) },
     select: { logoDataUrl: true },
   })) ?? null;
 
   return (
     <div className="shell">
-      <TopBar username={me.username} role={me.role} canReviewPasswords={perms.canReviewPasswords} showMaster={isMasterDeployment()} logoDataUrl={tenant?.logoDataUrl ?? null} />
+      <TopBar username={me.username} role={me.role} canReviewPasswords={perms.canReviewPasswords} logoDataUrl={tenant?.logoDataUrl ?? null} />
       <main className="main">
-        {tenantId() === "adweso" && perms.canManageUsers === true && (
+        {sTid(session) === "adweso" && perms.canManageUsers === true && (
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
             <SmsPanel allowed={true} />
           </div>
@@ -42,7 +41,7 @@ export default async function HomePage() {
           canEditDirect={perms.canEditRecords}
           canCreate={perms.canCreateRecords}
           canPay={perms.canRecordPayments}
-          smsSendable={tenantId() === "adweso" && perms.canManageUsers === true}
+          smsSendable={sTid(session) === "adweso" && perms.canManageUsers === true}
           currentUsername={me.username}
         />
         <LicenseGate />

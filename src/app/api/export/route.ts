@@ -3,7 +3,7 @@
 // Mirrors the current filter view (area / status / search).
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import * as XLSX from "xlsx";
 import { licenseStatus } from "@/lib/license";
 
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // LICENSE GATE: Excel export requires an unlocked register (payment made).
-  const license = await licenseStatus();
+  const license = await licenseStatus(sTid(session));
   if (license.locked)
     return NextResponse.json({ error: "EXPORT LOCKED", license }, { status: 402 });
 
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   const q = (sp.get("q") || "").trim();
   const status = (sp.get("status") || "").trim();
 
-  const where: Record<string, unknown> = { recordStatus: "ACTIVE", tenantId: tenantId() };
+  const where: Record<string, unknown> = { recordStatus: "ACTIVE", tenantId: sTid(session) };
   if (area) where.electoralArea = area;
   if (viewerScope.length) {
     if (area) where.electoralArea = viewerScope.includes(area) ? area : { in: [] };

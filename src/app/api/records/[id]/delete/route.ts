@@ -4,7 +4,7 @@
 // staff are blocked.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
 export async function DELETE(
@@ -23,7 +23,7 @@ export async function DELETE(
 
   const { id } = await params;
   try {
-    const payer = await prisma.feePayer.findFirst({ where: { id, tenantId: tenantId() } });
+    const payer = await prisma.feePayer.findFirst({ where: { id, tenantId: sTid(session) } });
     if (!payer || payer.recordStatus !== "ACTIVE")
       return NextResponse.json({ error: "Record not found" }, { status: 404 });
 
@@ -34,7 +34,7 @@ export async function DELETE(
       });
       await tx.auditLog.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
         
           userId: session.sub,
           action: "DELETE_RECORD",

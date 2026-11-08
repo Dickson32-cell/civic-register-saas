@@ -2,7 +2,7 @@
 // PATCH /api/admin/edits — approve (apply 'after' to the record) or reject
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, audit, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
 type EditRow = {
@@ -20,7 +20,7 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const edits: EditRow[] = (await prisma.pendingEdit.findMany({
-    where: { tenantId: tenantId() },
+    where: { tenantId: sTid(session) },
     orderBy: { createdAt: "desc" },
     include: {
       feePayer: { select: { serialNumber: true, name: true, businessName: true } },
@@ -55,7 +55,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "editId and decision (approve|reject) required" }, { status: 400 });
 
     const edit = await prisma.pendingEdit.findFirst({
-      where: { id: editId, tenantId: tenantId() },
+      where: { id: editId, tenantId: sTid(session) },
       include: { feePayer: true },
     });
     if (!edit) return NextResponse.json({ error: "Edit request not found" }, { status: 404 });
@@ -73,12 +73,12 @@ export async function PATCH(req: NextRequest) {
         });
         // keep the ledger in step when an approved edit changes the fee
         const newFee = updateData["fee"];        if (newFee != null && String(newFee).trim() !== "") {
-          const frows = await tx.fee.findMany({ where: { feePayerId: edit.feePayerId, tenantId: tenantId() } });
+          const frows = await tx.fee.findMany({ where: { feePayerId: edit.feePayerId, tenantId: sTid(session) } });
           const fsum = frows.reduce((s, f) => s + Number(f.amount), 0);
           if (frows.length === 1 && Math.abs(fsum - Number(newFee)) > 0.005)
             await tx.fee.update({ where: { id: frows[0].id }, data: { amount: String(Number(newFee).toFixed(2)) } });
           else if (frows.length === 0)
-            await tx.fee.create({ data: { tenantId: tenantId(), feePayerId: edit.feePayerId, amount: String(Number(newFee).toFixed(2)), description: "Opening fee (temporal structure)", createdBy: session.sub } });
+            await tx.fee.create({ data: { tenantId: sTid(session), feePayerId: edit.feePayerId, amount: String(Number(newFee).toFixed(2)), description: "Opening fee (temporal structure)", createdBy: session.sub } });
         }
       }
       await tx.pendingEdit.update({
@@ -91,7 +91,7 @@ export async function PATCH(req: NextRequest) {
       });
       await tx.auditLog.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
         
           userId: session.sub,
           action: `EDIT_${decision === "approve" ? "APPROVED" : "REJECTED"}`,

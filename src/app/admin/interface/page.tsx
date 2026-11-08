@@ -1,7 +1,7 @@
 // Admin page — Interface: this workspace's look. Name + colour are free;
 // logo and the bill designer open with the paid brand service.
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { getFullUser, prisma, tenantId } from "@/lib/db";
 import { permsFor } from "@/lib/perms";
 import TopBar from "@/app/TopBar";
@@ -15,7 +15,7 @@ export default async function AdminInterfacePage() {
   if (!me || !permsFor(me.role, me.adminLevel).canManageUsers) redirect("/");
 
   const tenant = (await prisma.tenant.findUnique({
-    where: { id: tenantId() },
+    where: { id: sTid(session) },
     select: { name: true, colour: true, logoDataUrl: true, brandingUnlocked: true, billHeadingOverride: true, billFooterNote: true, billTitle: true, billLegal1: true, billLegal2: true, billStampCaption: true },
   })) ?? null;
 

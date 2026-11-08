@@ -5,7 +5,7 @@
 // while the cash ledger stays truthful.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, tenantId, payerTotals, audit, getFullUser } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { sTid, getSession } from "@/lib/auth";
 import { permsFor } from "@/lib/perms";
 
 const PHONE_RE = /^0\d{9}$/;
@@ -37,7 +37,7 @@ export async function PATCH(
   const { id } = await params;
   try {
     const body = await req.json();
-    const payer = await prisma.feePayer.findFirst({ where: { id, tenantId: tenantId() } });
+    const payer = await prisma.feePayer.findFirst({ where: { id, tenantId: sTid(session) } });
     if (!payer || payer.recordStatus !== "ACTIVE")
       return NextResponse.json({ error: "Record not found" }, { status: 404 });
     // STAFF RULE: only payment settlement travels PATCH; every field edit
@@ -59,7 +59,7 @@ export async function PATCH(
 
     // --- Case 1: staff selects "PAID" → settle in full ---
     if (body.status === "PAID") {
-      const totals = await payerTotals(id);
+      const totals = await payerTotals(sTid(session), id);
       const outstanding = Number(totals.balance.toFixed(2));
       if (payer.status === "PAID") {
         return NextResponse.json({ ok: true, alreadyPaid: true, totals });
@@ -68,7 +68,7 @@ export async function PATCH(
         if (outstanding > 0) {
           await tx.payment.create({
             data: {
-              tenantId: await tenantId(),
+              tenantId: await sTid(session),
               feePayerId: id,
               amount: outstanding.toFixed(2),
               method: "CASH",
@@ -80,7 +80,7 @@ export async function PATCH(
         await tx.feePayer.update({ where: { id }, data: { status: "PAID" } });
         await tx.auditLog.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
         
             userId: session.sub,
             action: "MARK_PAID",
@@ -90,7 +90,7 @@ export async function PATCH(
           },
         });
       });
-      const after = await payerTotals(id);
+      const after = await payerTotals(sTid(session), id);
       return NextResponse.json({ ok: true, totals: after, status: "PAID" });
     }
 
@@ -100,7 +100,7 @@ export async function PATCH(
         await tx.feePayer.update({ where: { id }, data: { status: "UNPAID" } });
         await tx.auditLog.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
         
             userId: session.sub,
             action: "MARK_UNPAID",
@@ -110,7 +110,7 @@ export async function PATCH(
           },
         });
       });
-      const after = await payerTotals(id);
+      const after = await payerTotals(sTid(session), id);
       return NextResponse.json({ ok: true, totals: after, status: "UNPAID" });
     }
 
@@ -188,18 +188,18 @@ export async function PATCH(
       const r = await tx.feePayer.update({ where: { id }, data });
       // A fee edit rides the ledger: keep the fee row equal to the header fee
       if (data.fee != null) {
-        const frows = await tx.fee.findMany({ where: { feePayerId: id, tenantId: tenantId() } });
+        const frows = await tx.fee.findMany({ where: { feePayerId: id, tenantId: sTid(session) } });
         const fsum = frows.reduce((s, f) => s + Number(f.amount), 0);
         if (Math.abs(fsum - Number(data.fee)) > 0.005) {
           if (frows.length === 1)
             await tx.fee.update({ where: { id: frows[0].id }, data: { amount: data.fee } });
           else if (frows.length === 0)
-            await tx.fee.create({ data: { tenantId: tenantId(), feePayerId: id, amount: data.fee, description: "Opening fee (temporal structure)", createdBy: session.sub } });
+            await tx.fee.create({ data: { tenantId: sTid(session), feePayerId: id, amount: data.fee, description: "Opening fee (temporal structure)", createdBy: session.sub } });
         }
       }
       await tx.auditLog.create({
         data: {
-          tenantId: tenantId(),
+          tenantId: sTid(session),
         
           userId: session.sub,
           action: "UPDATE_RECORD",
@@ -211,7 +211,7 @@ export async function PATCH(
       return r;
     });
 
-    const totals = await payerTotals(id);
+    const totals = await payerTotals(sTid(session), id);
     return NextResponse.json({ ok: true, record: updated, totals });
   } catch (e) {
     console.error("update record error", e);
