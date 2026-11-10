@@ -520,3 +520,31 @@ html:not([data-theme="dark"]) .badge { border-radius: 999px; padding: 3px 11px; 
   html:not([data-theme="dark"]) .user-card-balance { background: #eef3fb; border-color: #d5e1f2; }
 }
 html:not([data-theme="dark"]) :focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+
+/* ---------- Theme switch (sun/moon slide toggle) ---------- */
+.theme-switch {
+  position: relative; display: inline-flex; align-items: center;
+  width: 84px; height: 44px; min-width: 84px; min-height: 44px;
+  border-radius: 999px; background: #33415f; border: 1px solid rgba(255,255,255,0.28);
+  cursor: pointer; padding: 0; vertical-align: middle;
+}
+.theme-switch .ts-icon {
+  position: absolute; top: 0; bottom: 0; width: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.8); pointer-events: none;
+}
+.theme-switch .ts-sun { left: 2px; }
+.theme-switch .ts-moon { right: 2px; }
+.theme-switch .ts-knob {
+  position: absolute; top: 3px; bottom: 3px; left: 3px; width: 39px;
+  background: #ffffff; border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  transition: transform 0.18s ease; transform: translateX(0);
+  pointer-events: none;
+}
+.theme-switch[aria-checked="true"] .ts-knob { transform: translateX(38px); }
+.theme-switch:focus-visible { outline: 2px solid #cfe0f5; outline-offset: 2px; }
+/* drawer row keeps the 44px touch law and lines the switch to the right */
+.drawer-item .theme-switch { width: 84px; }
+/* phones: switch stays reachable (44px) — no shrink */
+@media (max-width: 639px) { .theme-switch { width: 76px; min-width: 76px; } .theme-switch[aria-checked="true"] .ts-knob { transform: translateX(30px); } .theme-switch .ts-knob { width: 35px; } }
