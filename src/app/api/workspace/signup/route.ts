@@ -63,9 +63,17 @@ export async function POST(req: NextRequest) {
       tenantIdNew = `${tenantIdNew.slice(0, 8)}-${Date.now().toString(36).slice(-5)}`;
     }
 
-    const areaList: string[] = String(areas || "")
-      .split(/[,;\n]/).map((a: string) => a.trim())
-      .filter(Boolean).slice(0, 40);
+    // Areas: accept a comma/newline string (the form's own text field) OR an
+    // array of strings / {area} objects from integrations — never "[object Object]".
+    const areaList: string[] = (
+      Array.isArray(areas)
+        ? areas.map((a: unknown) => (typeof a === "string" ? a : (a as { area?: string })?.area ?? ""))
+        : String(areas || "")
+            .split(/[,;\n]/)
+    )
+      .map((a: unknown) => String(a ?? "").trim())
+      .filter(Boolean)
+      .slice(0, 40);
     // Areas live on the tenant (areas JSON) and each gets a serial counter so
     // every serial code (e.g. CENT/ 01) exists from the first record.
     const areaEntries = areaList.map((a) => {
