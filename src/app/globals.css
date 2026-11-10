@@ -548,3 +548,57 @@ html:not([data-theme="dark"]) :focus-visible { outline: 2px solid var(--navy); o
 .drawer-item .theme-switch { width: 84px; }
 /* phones: switch stays reachable (44px) — no shrink */
 @media (max-width: 639px) { .theme-switch { width: 76px; min-width: 76px; } .theme-switch[aria-checked="true"] .ts-knob { transform: translateX(30px); } .theme-switch .ts-knob { width: 35px; } }
+
+/* =============================================================
+   MENU BAR — DESIGN A "White executive" (Dickson's pick, 11 Nov 2026)
+   Light mode = white band, navy brand, quiet text links, active underline.
+   Dark mode keeps the deep band. Visible-affordance law: burger + links
+   draw their own colours, never inherit from the band.
+   ============================================================= */
+html:not([data-theme="dark"]) .topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #d7dfec;
+  box-shadow: 0 1px 2px rgba(16, 35, 66, 0.06);
+}
+html:not([data-theme="dark"]) .topbar .brand .t1 { color: #122447; }
+html:not([data-theme="dark"]) .topbar .brand .t2 { color: #5b6b86; }
+html:not([data-theme="dark"]) .topbar .who { color: #33415c; }
+html:not([data-theme="dark"]) .topbar .who b { color: #122447; }
+html:not([data-theme="dark"]) .topbar .btn-ghost { color: #2a3d5f; border-color: #c9d3e2; }
+html:not([data-theme="dark"]) .topbar .btn-ghost:hover { background: #eef3fb; }
+/* Burger: navy on white (self-drawn, always visible) */
+html:not([data-theme="dark"]) .topbar .drawer-burger {
+  color: #1c3f6e; background: #e8eef8; border: 1px solid #c9d5ea;
+}
+html:not([data-theme="dark"]) .topbar .burger-bars i { background: #1c3f6e; }
+/* Nav links: quiet text, active = navy + underline */
+.nav-link {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 10px;
+  font-size: 13.5px; font-weight: 600; color: #33415c; background: none;
+  border: none; border-radius: 8px; cursor: pointer; text-decoration: none;
+  letter-spacing: 0.1px; white-space: nowrap;
+}
+.nav-link:hover { color: #1c3f6e; background: #eef3fb; }
+html[data-theme="dark"] .nav-link { color: #dfe8f5; }
+html[data-theme="dark"] .nav-link:hover { background: rgba(255,255,255,0.08); }
+html[data-theme="dark"] .topbar { background: #122036; border-bottom: 1px solid rgba(255,255,255,0.08); }
+html[data-theme="dark"] .topbar .btn-ghost { color: #dfe8f5; border-color: rgba(255,255,255,0.3); }
+html[data-theme="dark"] .topbar .who { color: #dfe8f5; }
+html[data-theme="dark"] .topbar .who b { color: #fff; }
+html[data-theme="dark"] .topbar .brand .t2 { color: #9fb2cc; }
+/* Active page: desktop underline (PC law) + drawer accent edge (phone law) */
+.topbar .nav-link.nav-on {
+  color: #1c3f6e; font-weight: 750;
+  border-bottom: 2.5px solid #1c3f6e; border-radius: 2px 2px 0 0;
+  padding-bottom: 2px;
+}
+html[data-theme="dark"] .topbar .nav-link.nav-on { color: #fff; border-bottom-color: #8fb2e0; }
+.drawer-item.nav-on {
+  border-left: 4px solid #1c3f6e; padding-left: 16px; font-weight: 700;
+}
+html[data-theme="dark"] .drawer-item.nav-on { border-left-color: #8fb2e0; }
+/* tablet: chips wrap, never overflow (law) */
+@media (min-width: 640px) and (max-width: 900px) {
+  .topbar .who.only-desktop { flex-wrap: wrap; gap: 4px; }
+  .nav-link { min-height: 38px; padding: 0 8px; font-size: 13px; }
+}

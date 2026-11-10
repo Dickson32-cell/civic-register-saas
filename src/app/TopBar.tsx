@@ -1,11 +1,12 @@
 "use client";
 // TopBar — logo + brand + user + Change Password + admin links + logout
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
 export default function TopBar({ username, role, canReviewPasswords, logoDataUrl: logoProp, tenantName }: { username: string; role: string; canReviewPasswords?: boolean; logoDataUrl?: string | null; tenantName?: string | null }) {
   const router = useRouter();
+  const pathname = usePathname() || "/";
   const [pwOpen, setPwOpen] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [curPw, setCurPw] = useState("");
@@ -51,18 +52,18 @@ export default function TopBar({ username, role, canReviewPasswords, logoDataUrl
   // Drawer content — admin links + actions (phones only; CSS hides on desktop)
   const drawerBody = (
     <nav className="drawer-nav" onClick={() => setDrawer(false)}>
-      <a href="/" className="drawer-item">Home</a>
-      <a href="/map" className="drawer-item">Map</a>
+      <a href="/" className={`drawer-item${pathname === "/" ? " nav-on" : ""}`}>Home</a>
+      <a href="/map" className={`drawer-item${pathname === "/map" ? " nav-on" : ""}`}>Map</a>
       {role === "ADMIN" && (
         <>
-          <a href="/admin/approvals" className="drawer-item">
+          <a href="/admin/approvals" className={`drawer-item${pathname === "/admin/approvals" ? " nav-on" : ""}`}>
             Approvals{pendingCount ? ` (${pendingCount})` : ""}
           </a>
-          <a href="/admin/interface" className="drawer-item">Interface</a>
-          <a href="/admin/services" className="drawer-item">Services</a>
-          <a href="/admin/users" className="drawer-item">Staff</a>
-          <a href="/admin/edits" className="drawer-item">Edits</a>
-          {canReviewPasswords && <a href="/admin/passwords" className="drawer-item">Passwords</a>}
+          <a href="/admin/interface" className={`drawer-item${pathname === "/admin/interface" ? " nav-on" : ""}`}>Interface</a>
+          <a href="/admin/services" className={`drawer-item${pathname === "/admin/services" ? " nav-on" : ""}`}>Services</a>
+          <a href="/admin/users" className={`drawer-item${pathname === "/admin/users" ? " nav-on" : ""}`}>Staff</a>
+          <a href="/admin/edits" className={`drawer-item${pathname === "/admin/edits" ? " nav-on" : ""}`}>Edits</a>
+          {canReviewPasswords && <a href="/admin/passwords" className={`drawer-item${pathname === "/admin/passwords" ? " nav-on" : ""}`}>Passwords</a>}
         </>
       )}
       <ThemeToggle drawer />
@@ -99,41 +100,41 @@ export default function TopBar({ username, role, canReviewPasswords, logoDataUrl
       {/* Desktop/tablet inline buttons — hidden on phones (drawer replaces them) */}
       <div className="who only-desktop">
         <b>{username}</b> · {role === "ADMIN" ? "Administrator" : "Staff"} &nbsp;{" "}
-        <a href="/" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+        <a href="/" className={"nav-link" + (pathname === "/" ? " nav-on" : "")}>
           Home
         </a>{" "}
-        <a href="/map" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+        <a href="/map" className={"nav-link" + (pathname.startsWith("/map") ? " nav-on" : "")}>
           Map
         </a>{" "}
         {role === "ADMIN" && (
           <>
-            <a href="/admin/approvals" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+            <a href="/admin/approvals" className={"nav-link" + (pathname.startsWith("/admin/approvals") ? " nav-on" : "")}>
               Approvals{pendingCount ? ` (${pendingCount})` : ""}
             </a>{" "}
-            <a href="/admin/interface" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+            <a href="/admin/interface" className={"nav-link" + (pathname.startsWith("/admin/interface") ? " nav-on" : "")}>
               Interface
             </a>{" "}
-            <a href="/admin/services" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+            <a href="/admin/services" className={"nav-link" + (pathname.startsWith("/admin/services") ? " nav-on" : "")}>
               Services
             </a>{" "}
-            <a href="/admin/users" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+            <a href="/admin/users" className={"nav-link" + (pathname.startsWith("/admin/users") ? " nav-on" : "")}>
               Staff
             </a>{" "}
-            <a href="/admin/edits" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+            <a href="/admin/edits" className={"nav-link" + (pathname.startsWith("/admin/edits") ? " nav-on" : "")}>
               Edits
             </a>{" "}
             {canReviewPasswords && (
-              <a href="/admin/passwords" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+              <a href="/admin/passwords" className={"nav-link" + (pathname.startsWith("/admin/passwords") ? " nav-on" : "")}>
                 Passwords
               </a>
             )}
           </>
         )}{" "}
         <ThemeToggle />{" "}
-        <button className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }} onClick={() => { setPwOpen((s) => !s); setPwMsg(""); setPwErr(""); }}>
+        <button className="nav-link" onClick={() => { setPwOpen((s) => !s); setPwMsg(""); setPwErr(""); }}>
           Change Password
         </button>{" "}
-        <button className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }} onClick={logout}>
+        <button className="nav-link" onClick={logout}>
           Log out
         </button>
       </div>
