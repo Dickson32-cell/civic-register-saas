@@ -42,6 +42,7 @@ export default function RegisterTable({
   canPay = true,
   smsSendable = false,
   currentUsername = "",
+  tenantName = "",
 }: {
   isAdmin?: boolean;
   moneyVisible?: boolean;
@@ -51,6 +52,7 @@ export default function RegisterTable({
   canPay?: boolean;
   smsSendable?: boolean;
   currentUsername?: string;
+  tenantName?: string;
   areas?: { area: string; code?: string | null }[];
 }) {
   const AREAS: string[] = (areas || []).map((a) => a.area);
@@ -471,7 +473,7 @@ export default function RegisterTable({
     <>
       <div className="card">
         <h2>Register</h2>
-        <p className="sub">Official register — Demo Council · powered by CivicData</p>
+        <p className="sub">Official register — {tenantName || "your workspace"} · powered by CivicData</p>
           {pendingCount > 0 && (
             <div style={{ margin: "8px 0" }}>
               <button className="btn btn-ghost btn-sm" onClick={() => { listPending().then((x) => { setPendingItems(x); setPendingListOpen(true); }); }}>

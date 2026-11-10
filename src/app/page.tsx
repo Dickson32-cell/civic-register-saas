@@ -50,6 +50,7 @@ export default async function HomePage() {
           canPay={perms.canRecordPayments}
           smsSendable={sTid(session) === "adweso" && perms.canManageUsers === true}
           currentUsername={me.username}
+          tenantName={(tenant as { name?: string } | null)?.name ?? ""}
         />
         <LicenseGate />
       </main>

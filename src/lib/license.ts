@@ -152,3 +152,60 @@ export async function assertCanCreate(tid: string): Promise<LicenseStatus | null
   const status = await licenseStatus(tid);
   return status.locked ? status : null;
 }
+
+// ---------------------------------------------------------------------------
+// SERVICE unlock keys (logo/branding + bill designer, extra staff seats).
+// Same family as the register-wall keys: HMAC(LICENSE_SECRET,
+// `${tid}:${kind}:${target}`) — one company's service key can never unlock
+// another company's services, and the key is useless after it is applied once.
+// Issued OFFLINE by the platform owner (scripts/issue_keys.cjs) after direct
+// MoMo/bank payment. Money never touches the system.
+// ---------------------------------------------------------------------------
+function serviceKeyRaw(tid: string, kind: string, target: number): string {
+  const mac = crypto.createHmac("sha256", councilSecret()).update(`${tid}:${kind}:${target}`).digest("hex").slice(0, 16).toUpperCase();
+  return mac.replace(/(.{4})(.{4})(.{4})(.{4})/, "$1-$2-$3-$4");
+}
+
+export function deriveServiceKey(tid: string, kind: "BRANDING" | "STAFF_SEATS", target: number): string {
+  return serviceKeyRaw(tid, kind, target);
+}
+
+export function verifyServiceKey(tid: string, kind: string, target: number, key: string): boolean {
+  const normalized = key.trim().toUpperCase().replace(/\s+/g, "");
+  return serviceKeyRaw(tid, kind, target) === normalized;
+}
+
+export async function applyServiceKey(tid: string, kind: "BRANDING" | "STAFF_SEATS", key: string, targetSeats?: number) {
+  const rl = keyRateCheck(`${tid}:${kind}`);
+  if (!rl.ok) return { ok: false as const, error: `Too many key attempts. Try again in ${rl.retryInMin} minutes.` };
+
+  if (kind === "BRANDING") {
+    const target = 1; // single one-time unlock
+    const tenant = await prisma.tenant.findUnique({ where: { id: tid }, select: { brandingUnlocked: true } });
+    if (tenant?.brandingUnlocked) return { ok: true as const, entitlement: "BRANDING already unlocked" };
+    if (!verifyServiceKey(tid, kind, target, key)) {
+      await auditKeyAttempt(tid, false, { kind, reason: "invalid-branding-key" });
+      return { ok: false as const, error: "Invalid key. Check with the system provider after payment." };
+    }
+    await prisma.tenant.update({ where: { id: tid }, data: { brandingUnlocked: true } });
+    await auditKeyAttempt(tid, true, { kind: "BRANDING", unlocked: target });
+    return { ok: true as const, entitlement: "Branding + bill designer unlocked" };
+  }
+
+  // STAFF_SEATS — target = the exact new seat limit; never lowers a tenant.
+  const tenant = await prisma.tenant.findUnique({ where: { id: tid }, select: { staffSeatLimit: true } });
+  const current = tenant?.staffSeatLimit ?? 2;
+  if (targetSeats === undefined || !Number.isInteger(targetSeats) || targetSeats < 3 || targetSeats > 500) {
+    return { ok: false as const, error: "Seat unlock requires the new seat limit the key was issued for." };
+  }
+  if (!verifyServiceKey(tid, kind, targetSeats, key)) {
+    await auditKeyAttempt(tid, false, { kind, reason: "invalid-seats-key" });
+    return { ok: false as const, error: "Invalid key. Check with the system provider after payment." };
+  }
+  if (targetSeats <= current) {
+    return { ok: false as const, error: `Your plan already covers ${current} seats. Keys raise the limit; they never lower it.` };
+  }
+  await prisma.tenant.update({ where: { id: tid }, data: { staffSeatLimit: targetSeats } });
+  await auditKeyAttempt(tid, true, { kind: "STAFF_SEATS", seats: targetSeats });
+  return { ok: true as const, entitlement: `Staff seats raised to ${targetSeats}` };
+}

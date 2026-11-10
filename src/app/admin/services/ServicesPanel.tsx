@@ -26,6 +26,12 @@ export default function ServicesPanel({ tenantId }: { tenantId: string }) {
   const [busy, setBusy] = useState(false);
   const [seats, setSeats] = useState("");
   const [phone, setPhone] = useState("");
+  const [keyKind, setKeyKind] = useState<"BRANDING" | "STAFF_SEATS">("BRANDING");
+  const [keyVal, setKeyVal] = useState("");
+  const [keySeats, setKeySeats] = useState("");
+  const [keyMsg, setKeyMsg] = useState("");
+  const [keyErr, setKeyErr] = useState("");
+  const [keyBusy, setKeyBusy] = useState(false);
 
   const load = useCallback(async () => {
     const r = await fetch("/api/tenant/services");
@@ -56,6 +62,33 @@ export default function ServicesPanel({ tenantId }: { tenantId: string }) {
       await load();
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function applyKey() {
+    setKeyBusy(true);
+    setKeyErr("");
+    setKeyMsg("");
+    try {
+      const body =
+        keyKind === "BRANDING"
+          ? { kind: "BRANDING", key: keyVal }
+          : { kind: "STAFF_SEATS", targetSeats: Number(keySeats), key: keyVal };
+      const res = await fetch("/api/tenant/services/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string; message?: string; ok?: boolean };
+      if (!res.ok || !j.ok) setKeyErr(j.error || "That key did not work");
+      else {
+        setKeyMsg(j.message || "Unlocked.");
+        setKeyVal("");
+        setKeySeats("");
+        await load();
+      }
+    } finally {
+      setKeyBusy(false);
     }
   }
 
@@ -137,6 +170,46 @@ export default function ServicesPanel({ tenantId }: { tenantId: string }) {
               Request logo &amp; branding
             </button>
           )}
+        </div>
+
+        <div className="card">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <h2 style={{ margin: 0, fontSize: 16 }}>Unlock with a key</h2>
+          </div>
+          <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>
+            Agree the price with the platform team, pay by Mobile Money or bank, and they give you a
+            key. Paste it here — the key only works for THIS company and only once.
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+            <button type="button" className={keyKind === "BRANDING" ? "btn btn-sm btn-primary" : "btn btn-sm btn-ghost"} onClick={() => setKeyKind("BRANDING")}>Logo &amp; bill designer</button>
+            <button type="button" className={keyKind === "STAFF_SEATS" ? "btn btn-sm btn-primary" : "btn btn-sm btn-ghost"} onClick={() => setKeyKind("STAFF_SEATS")}>More staff seats</button>
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {keyKind === "STAFF_SEATS" && (
+              <input
+                type="number"
+                min={3}
+                max={500}
+                placeholder="Seat count the key was issued for"
+                value={keySeats}
+                onChange={(e) => setKeySeats(e.target.value)}
+                style={{ flex: "0 1 200px", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15 }}
+              />
+            )}
+            <input
+              type="text"
+              placeholder="XXXX-XXXX-XXXX-XXXX"
+              value={keyVal}
+              onChange={(e) => setKeyVal(e.target.value.toUpperCase())}
+              autoCapitalize="characters"
+              style={{ flex: "1 1 240px", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15, letterSpacing: 1.5 }}
+            />
+            <button className="btn btn-primary" disabled={keyBusy || !keyVal || (keyKind === "STAFF_SEATS" && !keySeats)} onClick={applyKey}>
+              Apply key
+            </button>
+          </div>
+          {keyMsg && <div style={{ marginTop: 8, fontSize: 13, color: "var(--green)", fontWeight: 600 }}>{keyMsg}</div>}
+          {keyErr && <div style={{ marginTop: 8, fontSize: 13, color: "#b3261e", fontWeight: 600 }}>{keyErr}</div>}
         </div>
       </div>
 
