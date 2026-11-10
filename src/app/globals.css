@@ -602,3 +602,73 @@ html[data-theme="dark"] .drawer-item.nav-on { border-left-color: #8fb2e0; }
   .topbar .who.only-desktop { flex-wrap: wrap; gap: 4px; }
   .nav-link { min-height: 38px; padding: 0 8px; font-size: 13px; }
 }
+
+/* =============================================================
+   PHONE BOTTOM TAB BAR — real-app navigation (Dickson pick #1, 11 Nov)
+   Phone <640: fixed tabs Home / Map / Approvals / More + a More sheet.
+   PC/tablet: unchanged top bar. Safe-area law + 44px+ targets.
+   ============================================================= */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  display: none; background: #ffffff; border-top: 1px solid #d7dfec;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 18px -14px rgba(16, 35, 66, 0.4);
+}
+.tab {
+  flex: 1; min-height: 50px; display: flex; flex-direction: column;
+  align-items: center; gap: 3px; background: none; border: none;
+  padding: 3px 0 0; font-family: var(--font); cursor: pointer; text-decoration: none;
+}
+.tab .tic { position: relative; display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 26px; border-radius: 9px; color: #5b6b86; }
+.tab > span:last-child { font-size: 10.5px; font-weight: 600; color: #5b6b86; letter-spacing: 0.2px; }
+.tab.on .tic { background: #e8eef8; color: #1c3f6e; }
+.tab.on > span:last-child { color: #1c3f6e; font-weight: 800; }
+.tab .badge {
+  position: absolute; top: -3px; right: 2px; min-width: 16px; height: 16px;
+  border-radius: 999px; background: #b3261e; color: #fff; font-size: 9.5px;
+  font-weight: 800; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
+}
+.tb-scrim { position: fixed; inset: 0; z-index: 70; background: rgba(10, 20, 35, 0.45); }
+.tb-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 71;
+  background: #ffffff; border-radius: 16px 16px 0 0;
+  border: 1px solid #d7dfec;
+  padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -12px 30px -14px rgba(16, 35, 66, 0.5);
+}
+.tb-sheet .grip { width: 44px; height: 4px; border-radius: 4px; background: #c9d3e2; margin: 0 auto 12px; }
+.tb-sheet .g5 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.tb-sheet .gi {
+  min-height: 48px; display: inline-flex; align-items: center; justify-content: center;
+  background: #eef3fb; border: 1px solid #e0e8f4; border-radius: 10px;
+  font-size: 13px; font-weight: 700; color: #2a3d5f; text-decoration: none;
+  font-family: var(--font); cursor: pointer; padding: 6px;
+}
+.tb-sheet .gi:active { background: #dfe9f6; }
+.tb-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border-top: 1px solid #eef1f7; padding-top: 10px; font-size: 13px; color: #33415c; }
+.tb-foot b { color: #122447; }
+.tb-foot-actions { display: flex; align-items: center; gap: 14px; }
+.tb-quiet { color: #5b6b86; font-weight: 600; text-decoration: none; font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; }
+.tb-danger { color: #b3261e; font-weight: 700; background: none; border: none; font-size: 13.5px; min-height: 44px; padding: 0 6px; cursor: pointer; font-family: var(--font); }
+/* dark mode */
+html[data-theme="dark"] .tabbar { background: #0d1411; border-top-color: rgba(255,255,255,0.08); box-shadow: none; }
+html[data-theme="dark"] .tab .tic { color: #9fb2cc; }
+html[data-theme="dark"] .tab > span:last-child { color: #9fb2cc; }
+html[data-theme="dark"] .tab.on .tic { background: rgba(143, 178, 224, 0.16); color: #cfe0f5; }
+html[data-theme="dark"] .tab.on > span:last-child { color: #cfe0f5; font-weight: 800; }
+html[data-theme="dark"] .tb-sheet { background: #101823; border-color: rgba(255,255,255,0.1); }
+html[data-theme="dark"] .tb-sheet .grip { background: #2c3a4d; }
+html[data-theme="dark"] .tb-sheet .gi { background: #16222f; border-color: #22344a; color: #dfe8f5; }
+html[data-theme="dark"] .tb-foot { border-top-color: #1c2a3a; color: #9fb2cc; }
+html[data-theme="dark"] .tb-foot b { color: #fff; }
+html[data-theme="dark"] .tb-quiet { color: #9fb2cc; }
+/* phones only */
+@media (max-width: 639px) {
+  .tabbar { display: flex; }
+  /* burger retires — navigation lives in the tab bar now */
+  .topbar .drawer-burger { display: none; }
+  /* content clears the fixed bar */
+  .main { padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
+}

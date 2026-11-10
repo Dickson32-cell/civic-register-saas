@@ -9,6 +9,7 @@ export default function TopBar({ username, role, canReviewPasswords, logoDataUrl
   const pathname = usePathname() || "/";
   const [pwOpen, setPwOpen] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [curPw, setCurPw] = useState("");
   const [newPw, setNewPw] = useState("");
   const [pwMsg, setPwMsg] = useState("");
@@ -157,6 +158,51 @@ export default function TopBar({ username, role, canReviewPasswords, logoDataUrl
             {pwBusy ? "Submitting..." : "Request Change"}
           </button>
         </form>
+      )}
+
+      {/* ---- PHONE BOTTOM TAB BAR (real app navigation; PC/tablet keep the top bar) ---- */}
+      <nav className="tabbar" aria-label="Main navigation">
+        <a className={"tab" + (pathname === "/" ? " on" : "")} href="/">
+          <span className="tic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 11.2 12 4l9 7.2" /><path d="M5.4 9.6V20h13.2V9.6" /></svg></span>
+          <span>Home</span>
+        </a>
+        <a className={"tab" + (pathname.startsWith("/map") ? " on" : "")} href="/map">
+          <span className="tic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.7-6.5-10.4A6.5 6.5 0 0 1 12 4a6.5 6.5 0 0 1 6.5 6.6C18.5 15.3 12 21 12 21Z" /><circle cx="12" cy="10.5" r="2.2" /></svg></span>
+          <span>Map</span>
+        </a>
+        {role === "ADMIN" && (
+          <a className={"tab" + (pathname.startsWith("/admin/approvals") ? " on" : "")} href="/admin/approvals">
+            <span className="tic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4.5" y="4.5" width="15" height="16" rx="2.5" /><path d="M9 12.2l2.3 2.3L15.5 10" /></svg>{pendingCount ? <b className="badge">{pendingCount > 99 ? "99+" : pendingCount}</b> : null}</span>
+            <span>Approvals</span>
+          </a>
+        )}
+        <button type="button" className="tab" onClick={() => setMoreOpen(true)}>
+          <span className="tic"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9" /><circle cx="12" cy="12" r="1.9" /><circle cx="19" cy="12" r="1.9" /></svg></span>
+          <span>More</span>
+        </button>
+      </nav>
+      {moreOpen && (
+        <>
+          <div className="tb-scrim" onClick={() => setMoreOpen(false)} />
+          <div className="tb-sheet" role="dialog" aria-label="More menu">
+            <div className="grip" />
+            <div className="g5">
+              {role === "ADMIN" && <a className="gi" href="/admin/interface">Interface</a>}
+              {role === "ADMIN" && <a className="gi" href="/admin/services">Services</a>}
+              {role === "ADMIN" && <a className="gi" href="/admin/users">Staff</a>}
+              {role === "ADMIN" && <a className="gi" href="/admin/edits">Edits</a>}
+              {role === "ADMIN" && canReviewPasswords && <a className="gi" href="/admin/passwords">Passwords</a>}
+              <button type="button" className="gi" onClick={() => { setMoreOpen(false); setPwOpen((s) => !s); setPwMsg(""); setPwErr(""); }}>Change pw</button>
+            </div>
+            <div className="tb-foot">
+              <span><b>{username}</b> · {role === "ADMIN" ? "Administrator" : "Staff"}</span>
+              <span className="tb-foot-actions">
+                <a href="/login" className="tb-quiet" onClick={(e) => { e.preventDefault(); setMoreOpen(false); setDrawer(false); }}>Close</a>
+                <button type="button" className="tb-danger" onClick={logout}>Log out</button>
+              </span>
+            </div>
+          </div>
+        </>
       )}
     </header>
   );
