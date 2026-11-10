@@ -8,7 +8,10 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LSTYLE = `
 @media (max-width: 639px) {
-  .l-main { padding: 26px 16px; }
+  html, body { overflow-x: hidden; }
+  .l-main { padding: 26px 18px !important; width: 100% !important; max-width: 100% !important; }
+  .l-head { padding: 12px 16px !important; width: 100% !important; max-width: 100% !important; }
+  .l-head a { padding: 9px 14px !important; font-size: 13px !important; white-space: nowrap; }
   .l-h1 { font-size: 23px !important; }
   .l-cta-btn { width: 100%; justify-content: center; text-align: center; min-height: 48px; }
 }
@@ -25,7 +28,7 @@ export default function Landing() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--navy)", color: "#fff", display: "flex", flexDirection: "column" }}>
       <style>{LSTYLE}</style>
-      <header style={{ padding: "18px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }} className="l-head">
+      <header style={{ padding: "14px 18px", width: "100%", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "space-between" }} className="l-head">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.jpg" alt="CivicData logo" style={{ width: 40, height: 40, borderRadius: 8, background: "#fff" }} />
@@ -39,7 +42,7 @@ export default function Landing() {
         </a>
       </header>
 
-      <main style={{ maxWidth: 780, margin: "0 auto", padding: "34px 22px", flex: 1 }} className="l-main">
+      <main style={{ maxWidth: 780, width: "100%", boxSizing: "border-box", margin: "0 auto", padding: "34px 20px", flex: 1 }} className="l-main">
         <h1 style={{ fontSize: 30, lineHeight: 1.25, marginBottom: 10 }} className="l-h1">
           Collect data the way the big assemblies do — free.
         </h1>
@@ -79,7 +82,7 @@ export default function Landing() {
         </div>
       </main>
 
-      <footer style={{ padding: "16px 22px", fontSize: 12, opacity: 0.6, display: "flex", justifyContent: "space-between" }}>
+      <footer style={{ padding: "16px 20px", width: "100%", boxSizing: "border-box", fontSize: 12, opacity: 0.6, display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
         <span>Powered by CivicData — records only, never custody. Your data is visible only through your own logins.</span>
         <span />
       </footer>
