@@ -12,14 +12,7 @@ const CATS_WOOD = ["Small", "Medium", "Large"];
 const CATS_FOR = (t2: string) => (t2 === "Wooden" ? CATS_WOOD : CATS_ABC);
 const ctrTxt = (size?: string | null, cat?: string | null) => size ? (cat ? size + " — " + cat : size) : "—"; // CONTAINER-CATS
 const CONTAINER_SIZES = ["Small", "Medium", "Large"];
-const AREAS = [
-  "Adweso Estate",
-  "Adweso Town",
-  "Two Streams",
-  "Nyerede North",
-  "Nyerede South",
-  "Osabene Mile 50",
-];
+// AREAS come from the company's own Admin settings - typed by its admins, never hardcoded.
 
 const GHS = (n: number) =>
   "GH₵ " + (Number.isFinite(n) ? n : 0).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -40,6 +33,7 @@ type Grand = { records: number; billed: number; collected: number; outstanding: 
 type AreaSum = { count: number; billed: number; collected: number; outstanding: number };
 
 export default function RegisterTable({
+  areas = [],
   isAdmin = false,
   moneyVisible = false,
   canDelete = true,
@@ -57,7 +51,9 @@ export default function RegisterTable({
   canPay?: boolean;
   smsSendable?: boolean;
   currentUsername?: string;
+  areas?: { area: string; code?: string | null }[];
 }) {
+  const AREAS: string[] = (areas || []).map((a) => a.area);
   const [rows, setRows] = useState<Row[]>([]);
   const [byArea, setByArea] = useState<Record<string, AreaSum>>({});
   const [grand, setGrand] = useState<Grand>({ records: 0, billed: 0, collected: 0, outstanding: 0 });

@@ -33,6 +33,42 @@ export default function InterfacePanel(p: Props) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
+
+  // Areas — typed and managed by the institution's administrators
+  const [areaList, setAreaList] = useState<string[]>([]);
+  const [newArea, setNewArea] = useState("");
+  const [areaMsg, setAreaMsg] = useState("");
+
+  const loadAreas = useCallback(async () => {
+    const r = await fetch("/api/tenant/areas");
+    const j = (await r.json().catch(() => ({}))) as { areas?: { area: string }[] };
+    setAreaList((j.areas || []).map((a) => a.area));
+  }, []);
+  useEffect(() => { void loadAreas(); }, [loadAreas]);
+
+  async function addArea() {
+    const a = newArea.trim();
+    if (!a) return;
+    setErr(""); setAreaMsg("");
+    const r = await fetch("/api/tenant/areas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ area: a }) });
+    const j = (await r.json().catch(() => ({}))) as { error?: string; areas?: { area: string }[] };
+    if (!r.ok) { setErr(j.error || "Could not add the area"); return; }
+    setAreaList((j.areas || []).map((x) => x.area));
+    setNewArea("");
+    setAreaMsg(a + " added - it now appears in the registration form.");
+    setTimeout(() => setAreaMsg(""), 3500);
+  }
+
+  async function removeArea(a: string) {
+    setErr(""); setAreaMsg("");
+    const r = await fetch("/api/tenant/areas", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ area: a }) });
+    const j = (await r.json().catch(() => ({}))) as { error?: string; areas?: { area: string }[] };
+    if (!r.ok) { setErr(j.error || "Could not remove the area"); return; }
+    setAreaList((j.areas || []).map((x) => x.area));
+    setAreaMsg(a + " removed.");
+    setTimeout(() => setAreaMsg(""), 3500);
+  }
+
   const save = useCallback(async (body: Record<string, unknown>, okMsg: string) => {
     setBusy(true); setErr(""); setMsg("");
     try {
@@ -64,6 +100,27 @@ export default function InterfacePanel(p: Props) {
   return (
     <div>
       <div className="card" style={{ marginBottom: 12 }}>
+        <h2 style={{ margin: "0 0 4px" }}>Areas / branches</h2>
+        <div style={{ fontSize: 12.5, color: "#5b6b7a", marginBottom: 10 }}>
+          Type the areas, branches or zones your team records here. They appear in the registration form and get their own serial codes (e.g. RIV/ 01).
+        </div>
+        {areaList.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+            {areaList.map((a) => (
+              <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#eef3fb", border: "1px solid #c7d8f0", color: "#1c3f6e", borderRadius: 999, padding: "5px 10px", fontSize: 13 }}>
+                {a}
+                <button type="button" aria-label={"Remove " + a} onClick={() => void removeArea(a)} style={{ border: "none", background: "transparent", color: "#b0322a", fontWeight: 800, cursor: "pointer", fontSize: 14, lineHeight: 1 }}>x</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 8 }}>
+          <input value={newArea} onChange={(e) => setNewArea(e.target.value)}
+            placeholder="e.g. Riverside" style={{ flex: 1, padding: "10px 12px", border: "1.5px solid #c7d0da", borderRadius: 10, fontSize: 15, minHeight: 44 }} />
+          <button type="button" onClick={() => void addArea()} style={{ border: "none", background: "#1c3f6e", color: "#fff", borderRadius: 10, padding: "10px 16px", fontSize: 14.5, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>Add</button>
+        </div>
+        {areaMsg && <div style={{ fontSize: 12.5, color: "#1c6e43", marginTop: 8 }}>{areaMsg}</div>}
+      </div><div className="card" style={{ marginBottom: 12 }}>
         <h2 style={{ margin: "0 0 6px", fontSize: 16 }}>Your interface</h2>
         <div style={{ fontSize: 13, color: "var(--muted)" }}>
           Name and colour are free. Your logo and the bill designer open with the brand service

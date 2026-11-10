@@ -22,9 +22,14 @@ export default async function HomePage() {
   const perms = permsFor(me.role, me.adminLevel);
   const tenant = (await prisma.tenant.findUnique({
     where: { id: sTid(session) },
-    select: { logoDataUrl: true },
+    select: { logoDataUrl: true, areas: true },
   })) ?? null;
 
+  const rawAreas: { area: string; code?: string | null }[] =
+    tenant && Array.isArray((tenant as { areas?: unknown }).areas)
+      ? ((tenant as { areas: unknown }).areas as { area: string; code?: string | null }[]).map((a) => ({ area: a.area, code: a.code ?? null }))
+      : [];
+  const areasForRegister = rawAreas.length ? rawAreas : [];
   return (
     <div className="shell">
       <TopBar username={me.username} role={me.role} canReviewPasswords={perms.canReviewPasswords} logoDataUrl={tenant?.logoDataUrl ?? null} />
@@ -35,6 +40,7 @@ export default async function HomePage() {
           </div>
         )}
         <RegisterTable
+          areas={areasForRegister}
           isAdmin={me.role === "ADMIN"}
           moneyVisible={perms.canViewMoneyTotals}
           canDelete={perms.canDeleteRecords}
