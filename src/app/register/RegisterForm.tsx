@@ -110,7 +110,7 @@ export default function RegisterForm({ tenantName, logoDataUrl }: { tenantName: 
           <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" required />
         </label>
 
-        <button className="btn btn-primary w-full" disabled={busy} type="submit">
+        <button className="btn btn-primary" style={{ width: "100%" }} disabled={busy} type="submit">
           {busy ? "Sending…" : "Register"}
         </button>
         <p style={{ fontSize: 12, color: "#8a94a6", marginTop: 14, marginBottom: 0 }}>

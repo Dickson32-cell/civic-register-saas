@@ -31,7 +31,7 @@ export default async function RegisterPage({
           <img src="/logo.jpg" alt="CivicData logo" className="logo-lg" />
           <h1>This registration link is not valid</h1>
           <p>Ask your administrator to send you the official staff sign-up link for your organisation.</p>
-          <a href="/" className="btn btn-primary w-full">Go to CivicData</a>
+          <a href="/" className="btn btn-primary" style={{ width: "100%" }}>Go to CivicData</a>
         </div>
       </div>
     );
