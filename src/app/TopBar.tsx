@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 
-export default function TopBar({ username, role, canReviewPasswords, logoDataUrl: logoProp }: { username: string; role: string; canReviewPasswords?: boolean; logoDataUrl?: string | null }) {
+export default function TopBar({ username, role, canReviewPasswords, logoDataUrl: logoProp, tenantName }: { username: string; role: string; canReviewPasswords?: boolean; logoDataUrl?: string | null; tenantName?: string | null }) {
   const router = useRouter();
   const [pwOpen, setPwOpen] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -51,7 +51,7 @@ export default function TopBar({ username, role, canReviewPasswords, logoDataUrl
   // Drawer content — admin links + actions (phones only; CSS hides on desktop)
   const drawerBody = (
     <nav className="drawer-nav" onClick={() => setDrawer(false)}>
-      <a href="/" className="drawer-item">Register</a>
+      <a href="/" className="drawer-item">Home</a>
       <a href="/map" className="drawer-item">Map</a>
       {role === "ADMIN" && (
         <>
@@ -77,8 +77,8 @@ export default function TopBar({ username, role, canReviewPasswords, logoDataUrl
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoProp || "/logo.jpg"} alt="Institution logo" className="brand-logo" />
         <div>
-          <div className="t1">CivicData</div>
-          <div className="t2">Data collection platform</div>
+          <div className="t1">{tenantName || "CivicData"}</div>
+          <div className="t2">on CivicData</div>
         </div>
       </div>
       <div className="who">
@@ -99,6 +99,9 @@ export default function TopBar({ username, role, canReviewPasswords, logoDataUrl
       {/* Desktop/tablet inline buttons — hidden on phones (drawer replaces them) */}
       <div className="who only-desktop">
         <b>{username}</b> · {role === "ADMIN" ? "Administrator" : "Staff"} &nbsp;{" "}
+        <a href="/" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
+          Home
+        </a>{" "}
         <a href="/map" className="btn btn-ghost btn-sm" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.35)" }}>
           Map
         </a>{" "}

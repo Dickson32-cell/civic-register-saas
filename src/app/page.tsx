@@ -22,7 +22,7 @@ export default async function HomePage() {
   const perms = permsFor(me.role, me.adminLevel);
   const tenant = (await prisma.tenant.findUnique({
     where: { id: sTid(session) },
-    select: { logoDataUrl: true, areas: true },
+    select: { logoDataUrl: true, areas: true, name: true },
   })) ?? null;
 
   const rawAreas: { area: string; code?: string | null }[] =
@@ -32,7 +32,8 @@ export default async function HomePage() {
   const areasForRegister = rawAreas.length ? rawAreas : [];
   return (
     <div className="shell">
-      <TopBar username={me.username} role={me.role} canReviewPasswords={perms.canReviewPasswords} logoDataUrl={tenant?.logoDataUrl ?? null} />
+      <TopBar username={me.username} role={me.role} canReviewPasswords={perms.canReviewPasswords} logoDataUrl={tenant?.logoDataUrl ?? null}
+          tenantName={(tenant as { name?: string } | null)?.name ?? null} />
       <main className="main">
         {sTid(session) === "adweso" && perms.canManageUsers === true && (
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>

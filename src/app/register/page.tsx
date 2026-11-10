@@ -1,124 +1,41 @@
-"use client";
-// Staff self-registration page — creates an INACTIVE account;
-// the administrator approves it before the staff member can sign in.
-import { useState } from "react";
-import Link from "next/link";
+// Staff join page — resolves the company from the shared link's ?c=<tenantId>
+// and shows its name + logo, so staff always see WHOSE workspace they are joining.
+import { prisma } from "@/lib/db";
+import RegisterForm from "./RegisterForm";
 
-export default function RegisterPage() {
-  const [username, setUsername] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [err, setErr] = useState<string[]>([]);
-  const [done, setDone] = useState("");
-  const [busy, setBusy] = useState(false);
+export const dynamic = "force-dynamic";
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setErr([]);
-    setDone("");
-    if (password !== confirm) {
-      setErr(["Passwords do not match"]);
-      return;
-    }
-    setBusy(true);
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, fullName }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setErr(data.errors || [data.error || "Registration failed"]);
-        return;
-      }
-      setDone(data.message || "Registration received — awaiting administrator approval.");
-      setUsername(""); setFullName(""); setPassword(""); setConfirm("");
-    } catch {
-      setErr(["Network error — try again"]);
-    } finally {
-      setBusy(false);
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [k: string]: string | string[] | undefined }>;
+}) {
+  const sp = await searchParams;
+  const code = typeof sp.c === "string" ? sp.c : "";
+  let tenantName = "";
+  let logo: string | null = null;
+  if (/^[a-z0-9-]{4,40}$/.test(code)) {
+    const t = await prisma.tenant.findUnique({ where: { id: code }, select: { name: true, logoDataUrl: true } });
+    if (t) {
+      tenantName = t.name;
+      logo = t.logoDataUrl ?? null;
     }
   }
 
-  return (
-    <div className="login-wrap">
-      <form className="login-card" onSubmit={submit}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.jpg" alt="CivicData logo" className="logo-lg" />
-        <h1>Staff Registration</h1>
-        <p>CivicData — Data Collection Platform</p>
-
-        {err.length > 0 && <div className="err">{err.map((x, i) => <div key={i}>{x}</div>)}</div>}
-        {done && (
-          <div className="ok-msg">
-            {done}
-            <div style={{ marginTop: 6 }}>
-              <Link href="/login" style={{ color: "var(--green)", fontWeight: 600 }}>
-                Return to sign in
-              </Link>
-            </div>
-          </div>
-        )}
-
-        <label className="fld">
-          <span className="cap">Full Name <span className="req">*</span></span>
-          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-        </label>
-
-        <label className="fld">
-          <span className="cap">Username <span className="req">*</span></span>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="e.g. k.owusu"
-            autoComplete="username"
-            required
-          />
-        </label>
-
-        <label className="fld">
-          <span className="cap">Password <span className="req">*</span> <span style={{ fontWeight: 400, color: "var(--muted)" }}>(min 8 characters)</span></span>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              type={showPw ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
-              required
-              style={{ flex: 1 }}
-            />
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowPw((s) => !s)}>
-              {showPw ? "Hide" : "Show"}
-            </button>
-          </div>
-        </label>
-
-        <label className="fld">
-          <span className="cap">Confirm Password <span className="req">*</span></span>
-          <input
-            type={showPw ? "text" : "password"}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            autoComplete="new-password"
-            required
-          />
-        </label>
-
-        <button className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }} disabled={busy}>
-          {busy ? "Submitting..." : "Register for Approval"}
-        </button>
-
-        <div style={{ marginTop: 14, fontSize: 13, color: "var(--muted)" }}>
-          Already registered?{" "}
-          <Link href="/login" style={{ color: "var(--blue)", fontWeight: 600 }}>
-            Sign in
-          </Link>
+  // Malformed / unknown link — never a silent dead end.
+  if (!tenantName) {
+    return (
+      <div className="login-wrap">
+        <div className="login-card">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.jpg" alt="CivicData logo" className="logo-lg" />
+          <h1>This registration link is not valid</h1>
+          <p>Ask your administrator to send you the official staff sign-up link for your organisation.</p>
+          <a href="/" className="btn btn-primary w-full">Go to CivicData</a>
         </div>
-      </form>
-    </div>
-  );
+      </div>
+    );
+  }
+
+  return <RegisterForm tenantName={tenantName} logoDataUrl={logo} />;
 }
