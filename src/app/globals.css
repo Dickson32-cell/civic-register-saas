@@ -425,3 +425,98 @@ html[data-theme="dark"] .topbar .mark { background: #ffffff; color: #1c3f6e; }
   .topbar .who.only-desktop { flex-wrap: wrap; gap: 6px; }
   .topbar .who.only-desktop .btn { padding: 9px 11px; font-size: 12.5px; min-height: 44px; }
 }
+
+/* =============================================================
+   PROFESSIONAL POLISH LAYER v2 — PC / tablet / mobile surfaces
+   Appended last so it wins; light-mode scoped (dark layer below
+   still handles its own overrides); print untouched.
+   No glassmorphism, no gradients, no glow — solid brand colors,
+   editorial spacing, consistent radii (Dickson's design laws).
+   ============================================================= */
+html:not([data-theme="dark"]) {
+  --paper: #eef2f8;
+  --polish-line: #d7dfec;
+  --polish-line-soft: #e4eaf4;
+}
+html:not([data-theme="dark"]) body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* Shell: centered, calm, generous whitespace on PC */
+html:not([data-theme="dark"]) .main {
+  max-width: 1240px; padding: 28px 32px 48px;
+}
+html:not([data-theme="dark"]) .card {
+  border-radius: 14px; border: 1px solid var(--polish-line-soft);
+  box-shadow: 0 1px 2px rgba(16, 35, 66, 0.05), 0 8px 24px -18px rgba(16, 35, 66, 0.22);
+  padding: 20px;
+}
+html:not([data-theme="dark"]) .card h2 { font-size: 15.5px; letter-spacing: 0.2px; }
+html:not([data-theme="dark"]) .card .sub { font-size: 13px; margin-bottom: 14px; }
+
+/* Topbar: single clean band, sticky, gentle elevation */
+html:not([data-theme="dark"]) .topbar {
+  position: sticky; top: 0; z-index: 55;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 2px 10px rgba(10, 30, 60, 0.22);
+}
+html:not([data-theme="dark"]) .topbar .brand .t1 { font-size: 15.5px; letter-spacing: 0.3px; }
+html:not([data-theme="dark"]) .topbar .brand .t2 { color: #b9c9de; }
+
+/* Buttons: one consistent family */
+html:not([data-theme="dark"]) .btn { border-radius: 10px; font-weight: 650; letter-spacing: 0.15px; padding: 9px 16px; font-size: 14px; }
+html:not([data-theme="dark"]) .btn-primary { background: var(--navy); box-shadow: 0 1px 2px rgba(16, 35, 66, 0.35); }
+html:not([data-theme="dark"]) .btn-primary:hover { background: var(--navy-800); }
+html:not([data-theme="dark"]) .btn-primary:disabled { background: #9db1c9; }
+html:not([data-theme="dark"]) .btn-ghost { border: 1px solid #c9d3e2; }
+html:not([data-theme="dark"]) .btn-ghost:hover { background: #eef3fb; border-color: #b6c4da; }
+html:not([data-theme="dark"]) .btn-sm { border-radius: 9px; }
+
+/* Forms: calmer borders, softer focus ring */
+html:not([data-theme="dark"]) input[type="text"], html:not([data-theme="dark"]) input[type="tel"],
+html:not([data-theme="dark"]) input[type="number"], html:not([data-theme="dark"]) input[type="password"],
+html:not([data-theme="dark"]) select {
+  border: 1px solid #ccd5e3; border-radius: 9px; padding: 10px 13px; font-size: 14.5px;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+html:not([data-theme="dark"]) input:focus, html:not([data-theme="dark"]) select:focus {
+  outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(28, 63, 110, 0.14);
+}
+
+/* Tables: editorial, light header, airy rows — the daily surface */
+html:not([data-theme="dark"]) table.tbl { font-size: 13.8px; border: 1px solid var(--polish-line-soft); border-radius: 12px; overflow: hidden; }
+html:not([data-theme="dark"]) .tbl th {
+  background: #f2f6fc; color: #33415c; font-size: 11.5px; font-weight: 750;
+  letter-spacing: 0.06em; padding: 11px 14px; border-bottom: 2px solid #ccd8ea;
+}
+html:not([data-theme="dark"]) .tbl td { padding: 12px 14px; border-bottom: 1px solid #edf1f8; vertical-align: middle; }
+html:not([data-theme="dark"]) .tbl tr:nth-child(even) td { background: transparent; }
+html:not([data-theme="dark"]) .tbl tbody tr:hover td { background: #f5f8fd; }
+html:not([data-theme="dark"]) .tbl tr:last-child td { border-bottom: none; }
+html:not([data-theme="dark"]) .tbl .serial { font-variant-numeric: tabular-nums; letter-spacing: 0.2px; }
+
+/* Totals + summary: same family, softer corners */
+html:not([data-theme="dark"]) .grand { border-radius: 12px; margin-top: 16px; }
+html:not([data-theme="dark"]) .sum-card { border-radius: 10px; border: 1px solid var(--polish-line-soft); padding: 14px 16px; }
+
+/* Login/signup shells: keep the navy stage, breathe more */
+html:not([data-theme="dark"]) .login-wrap { background: #12233d; }
+html:not([data-theme="dark"]) .login-card { border-radius: 16px; }
+
+/* Badges: pill + weight */
+html:not([data-theme="dark"]) .badge { border-radius: 999px; padding: 3px 11px; }
+
+/* ---------- Tablet: comfortable two-column rhythm ---------- */
+@media (min-width: 640px) and (max-width: 1024px) {
+  html:not([data-theme="dark"]) .main { padding: 20px 22px 40px; }
+  html:not([data-theme="dark"]) .card { padding: 18px; }
+  html:not([data-theme="dark"]) .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  html:not([data-theme="dark"]) .tbl td, html:not([data-theme="dark"]) .tbl th { padding: 10px 12px; }
+}
+
+/* ---------- Phones: same polish, tighter ---------- */
+@media (max-width: 639px) {
+  html:not([data-theme="dark"]) .main { padding: 14px; }
+  html:not([data-theme="dark"]) .card { border-radius: 12px; padding: 16px 14px; }
+  html:not([data-theme="dark"]) .sum-card { padding: 12px; }
+  html:not([data-theme="dark"]) .grand { border-radius: 10px; }
+  html:not([data-theme="dark"]) .user-card-balance { background: #eef3fb; border-color: #d5e1f2; }
+}
+html:not([data-theme="dark"]) :focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
