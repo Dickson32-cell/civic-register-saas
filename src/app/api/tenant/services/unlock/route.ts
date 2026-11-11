@@ -4,6 +4,7 @@
 // never holds money; the key is the authority.
 //   { kind: "BRANDING", key }                   -> logo + bill designer
 //   { kind: "STAFF_SEATS", targetSeats, key }   -> raise staff seats to targetSeats
+//   { kind: "FULL", key }                       -> one-time full system (GHS 6,000)
 import { NextRequest, NextResponse } from "next/server";
 import { getFullUser, prisma } from "@/lib/db";
 import { sTid, getSession } from "@/lib/auth";
@@ -19,6 +20,14 @@ export async function POST(req: NextRequest) {
 
   const { kind, targetSeats, key } = await req.json().catch(() => ({ kind: "", targetSeats: 0, key: "" }));
   const tid = sTid(session);
+
+  if (String(kind) === "FULL") {
+    if (!key || typeof key !== "string")
+      return NextResponse.json({ error: "Enter the unlock key you were issued" }, { status: 400 });
+    const r = await applyServiceKey(tid, "FULL", String(key));
+    if (!r.ok) return NextResponse.json({ error: r.error }, { status: 403 });
+    return NextResponse.json({ ok: true, message: r.entitlement });
+  }
 
   if (String(kind) === "BRANDING") {
     if (!key || typeof key !== "string")

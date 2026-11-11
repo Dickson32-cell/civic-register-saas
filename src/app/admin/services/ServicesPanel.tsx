@@ -26,7 +26,7 @@ export default function ServicesPanel({ tenantId }: { tenantId: string }) {
   const [busy, setBusy] = useState(false);
   const [seats, setSeats] = useState("");
   const [phone, setPhone] = useState("");
-  const [keyKind, setKeyKind] = useState<"BRANDING" | "STAFF_SEATS">("BRANDING");
+  const [keyKind, setKeyKind] = useState<"BRANDING" | "STAFF_SEATS" | "FULL">("FULL");
   const [keyVal, setKeyVal] = useState("");
   const [keySeats, setKeySeats] = useState("");
   const [keyMsg, setKeyMsg] = useState("");
@@ -71,9 +71,11 @@ export default function ServicesPanel({ tenantId }: { tenantId: string }) {
     setKeyMsg("");
     try {
       const body =
-        keyKind === "BRANDING"
-          ? { kind: "BRANDING", key: keyVal }
-          : { kind: "STAFF_SEATS", targetSeats: Number(keySeats), key: keyVal };
+        keyKind === "FULL"
+          ? { kind: "FULL", key: keyVal }
+          : keyKind === "BRANDING"
+            ? { kind: "BRANDING", key: keyVal }
+            : { kind: "STAFF_SEATS", targetSeats: Number(keySeats), key: keyVal };
       const res = await fetch("/api/tenant/services/unlock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -176,12 +178,18 @@ export default function ServicesPanel({ tenantId }: { tenantId: string }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
             <h2 style={{ margin: 0, fontSize: 16 }}>Unlock with a key</h2>
           </div>
-          <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>
-            Agree the price with the platform team, pay by Mobile Money or bank, and they give you a
-            key. Paste it here — the key only works for THIS company and only once.
+          <div style={{ fontSize: 13.5, color: "#33415c", marginBottom: 8, lineHeight: 1.6 }}>
+            <b>Full system: GHS 6,000</b> (one-time) — pay by Mobile Money to <b>0595726252</b>, then send your
+            workspace name and the payment confirmation to that number. The platform team replies with your key;
+            paste it here. The key only works for THIS company and only once.
+          </div>
+          <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 8 }}>
+            Also available separately: logo &amp; bill designer, or extra staff seats — agree the price the same way and
+            a key lands here.
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-            <button type="button" className={keyKind === "BRANDING" ? "btn btn-sm btn-primary" : "btn btn-sm btn-ghost"} onClick={() => setKeyKind("BRANDING")}>Logo &amp; bill designer</button>
+            <button type="button" className={keyKind === "FULL" ? "btn btn-sm btn-primary" : "btn btn-sm btn-ghost"} onClick={() => setKeyKind("FULL")}>Full system — GHS 6,000</button>
+            <button type="button" className={keyKind === "BRANDING" ? "btn btn-sm btn-primary" : "btn btn-sm btn-ghost"} onClick={() => setKeyKind("BRANDING")}>Logo &amp; designer</button>
             <button type="button" className={keyKind === "STAFF_SEATS" ? "btn btn-sm btn-primary" : "btn btn-sm btn-ghost"} onClick={() => setKeyKind("STAFF_SEATS")}>More staff seats</button>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -204,7 +212,7 @@ export default function ServicesPanel({ tenantId }: { tenantId: string }) {
               autoCapitalize="characters"
               style={{ flex: "1 1 240px", padding: "10px 12px", border: "1px solid var(--line-strong)", borderRadius: 8, fontSize: 15, letterSpacing: 1.5 }}
             />
-            <button className="btn btn-primary" disabled={keyBusy || !keyVal || (keyKind === "STAFF_SEATS" && !keySeats)} onClick={applyKey}>
+            <button className="btn btn-primary" disabled={keyBusy || !keyVal || (keyKind === "STAFF_SEATS" && !keySeats) || keyKind === "FULL" && !keyVal} onClick={applyKey}>
               Apply key
             </button>
           </div>

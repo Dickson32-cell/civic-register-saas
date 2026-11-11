@@ -166,7 +166,7 @@ function serviceKeyRaw(tid: string, kind: string, target: number): string {
   return mac.replace(/(.{4})(.{4})(.{4})(.{4})/, "$1-$2-$3-$4");
 }
 
-export function deriveServiceKey(tid: string, kind: "BRANDING" | "STAFF_SEATS", target: number): string {
+export function deriveServiceKey(tid: string, kind: "BRANDING" | "STAFF_SEATS" | "FULL", target: number): string {
   return serviceKeyRaw(tid, kind, target);
 }
 
@@ -175,7 +175,30 @@ export function verifyServiceKey(tid: string, kind: string, target: number, key:
   return serviceKeyRaw(tid, kind, target) === normalized;
 }
 
-export async function applyServiceKey(tid: string, kind: "BRANDING" | "STAFF_SEATS", key: string, targetSeats?: number) {
+export async function applyServiceKey(tid: string, kind: "BRANDING" | "STAFF_SEATS" | "FULL", key: string, targetSeats?: number) {
+  // FULL — one-time full-system unlock (the GHS 6,000 purchase):
+  // branding + bill designer open, staff seats to 200, register wall lifted.
+  if (kind === "FULL") {
+    const rl = keyRateCheck(`${tid}:FULL`);
+    if (!rl.ok) return { ok: false as const, error: `Too many key attempts. Try again in ${rl.retryInMin} minutes.` };
+    if (!verifyServiceKey(tid, "FULL", 1, key)) {
+      await auditKeyAttempt(tid, false, { kind: "FULL", reason: "invalid-full-key" });
+      return { ok: false as const, error: "Invalid key. Check with the system provider after payment." };
+    }
+    const tenant = await prisma.tenant.findUnique({ where: { id: tid }, select: { brandingUnlocked: true } });
+    if (tenant?.brandingUnlocked && (await getLicenseState(tid)).paidThrough >= 900000) {
+      await auditKeyAttempt(tid, true, { kind: "FULL", note: "already unlocked" });
+      return { ok: true as const, entitlement: "Full system already unlocked" };
+    }
+    await prisma.tenant.update({ where: { id: tid }, data: { brandingUnlocked: true, staffSeatLimit: 200 } });
+    await prisma.licenseState.upsert({
+      where: { id: tid },
+      update: { paidThrough: 999000, lastPaymentAt: new Date() },
+      create: { id: tid, paidThrough: 999000 },
+    });
+    await auditKeyAttempt(tid, true, { kind: "FULL", unlocked: "full-system" });
+    return { ok: true as const, entitlement: "Full system unlocked — branding, 200 staff seats and unlimited registrations" };
+  }
   const rl = keyRateCheck(`${tid}:${kind}`);
   if (!rl.ok) return { ok: false as const, error: `Too many key attempts. Try again in ${rl.retryInMin} minutes.` };
 

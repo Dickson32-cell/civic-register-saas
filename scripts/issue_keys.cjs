@@ -5,6 +5,7 @@
 // THAT company and send it to them. Usage:
 //
 //   node scripts/issue_keys.cjs <tenantId> branding
+//   node scripts/issue_keys.cjs <tenantId> full
 //   node scripts/issue_keys.cjs <tenantId> seats <newLimit>
 //       (branding = logo + bill designer, one-time; seats = raise limit to N)
 //   node scripts/issue_keys.cjs <tenantId> register
@@ -32,10 +33,14 @@ function key(tid, stamp) {
 }
 
 const [, , tid, kind, extra] = process.argv;
-if (!tid || !kind) { console.log("Usage: node scripts/issue_keys.cjs <tenantId> branding | seats <limit> | register"); process.exit(1); }
+if (!tid || !kind) { console.log("Usage: node scripts/issue_keys.cjs <tenantId> branding | full | seats <limit> | register"); process.exit(1); }
 
 (async () => {
-  if (kind === "branding") {
+  if (kind === "full") {
+    console.log(`FULL SYSTEM key for ${tid} (GHS 6,000):`);
+    console.log(key(tid, `${tid}:FULL:1`));
+    console.log("Company pastes it under Admin > Services > Unlock with a key > Full system.");
+  } else if (kind === "branding") {
     console.log(`Logo + bill designer key for ${tid}:`);
     console.log(key(tid, `${tid}:BRANDING:1`));
     console.log("Give this to the company admin (Admin > Services > Unlock with a key).");
@@ -55,7 +60,7 @@ if (!tid || !kind) { console.log("Usage: node scripts/issue_keys.cjs <tenantId> 
     console.log(`Register key (unlocks through ${target}) for ${tid}:`);
     console.log(key(tid, `${tid}:${target}`));
   } else {
-    console.error("Unknown kind — use branding | seats <limit> | register");
+    console.error("Unknown kind — use branding | full | seats <limit> | register");
     process.exit(1);
   }
 })().catch((e) => { console.error(e.message); process.exit(1); });
